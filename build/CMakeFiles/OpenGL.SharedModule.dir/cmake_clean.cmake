@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/Drawer.hpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/Drawer.hpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/OpenGlShape.hpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/OpenGlShape.hpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/SharedModule.hpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/abstraction/SharedModule.hpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/glad.c.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/glad.c.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_demo.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_demo.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_draw.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_draw.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_impl_glfw.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_impl_glfw.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_impl_opengl3.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_impl_opengl3.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_stdlib.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_stdlib.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_tables.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_tables.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_widgets.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/imgui/imgui_widgets.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/Drawer.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/Drawer.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/OpenGlShape.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/OpenGlShape.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/SharedModule.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/implementation/SharedModule.cpp.obj.d"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/stb_image.cpp.obj"
+  "CMakeFiles/OpenGL.SharedModule.dir/OpenGL.SharedModule/src/stb_image.cpp.obj.d"
+  "libOpenGL.SharedModule.a"
+  "libOpenGL.SharedModule.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C CXX)
+  include(CMakeFiles/OpenGL.SharedModule.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

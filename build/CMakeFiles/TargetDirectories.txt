@@ -1,0 +1,4 @@
+C:/Users/ASUS/Desktop/L4/build/CMakeFiles/OpenGL.SharedModule.dir
+C:/Users/ASUS/Desktop/L4/build/CMakeFiles/GLProject.dir
+C:/Users/ASUS/Desktop/L4/build/CMakeFiles/edit_cache.dir
+C:/Users/ASUS/Desktop/L4/build/CMakeFiles/rebuild_cache.dir
