@@ -38,6 +38,9 @@ namespace scene
 				glm::translate(glm::mat4(1.0f), glm::vec3(16.0f, 2.5f, 1.0f)) *
 				glm::rotate(glm::mat4(1.0f), Pi * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
 				glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 8.0f, 1.0f)));
+
+			drawHorizontalTexture(shader, *quad, wallTexture,
+				glm::vec3(0.0f, 6.5f, 1.0f), glm::vec2(32.0f, 30.0f));
 		}
 
 		void cleanup()
