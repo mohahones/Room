@@ -5,91 +5,17 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace scene
 {
-	struct LitTexturedVertex
+	struct TexturedVertex
 	{
 		glm::vec3 position;
-		glm::vec3 normal;
 		glm::vec2 texCoord;
-	};
-
-	class LitTexturedMesh
-	{
-	public:
-		void initialize(const std::vector<LitTexturedVertex>& vertices)
-		{
-			if (vertices.empty())
-				throw std::logic_error("Cannot initialize an empty lit mesh.");
-
-			glGenVertexArrays(1, &vao);
-			glGenBuffers(1, &vbo);
-			if (!vao || !vbo)
-			{
-				cleanup();
-				throw std::runtime_error("Failed to allocate lamp mesh buffers.");
-			}
-
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER,
-				static_cast<GLsizeiptr>(vertices.size() * sizeof(LitTexturedVertex)),
-				vertices.data(), GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(LitTexturedVertex),
-				reinterpret_cast<void*>(offsetof(LitTexturedVertex, position)));
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(LitTexturedVertex),
-				reinterpret_cast<void*>(offsetof(LitTexturedVertex, normal)));
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(LitTexturedVertex),
-				reinterpret_cast<void*>(offsetof(LitTexturedVertex, texCoord)));
-			glEnableVertexAttribArray(2);
-			glBindVertexArray(0);
-			vertexCount = static_cast<GLsizei>(vertices.size());
-		}
-
-		void draw(Shader& shader, GLuint texture, const glm::mat4& model,
-			const glm::vec3& color, float shininess, float specularStrength,
-			float metallic) const
-		{
-			if (!vao || vertexCount <= 0)
-				throw std::logic_error("Lit mesh was not initialized.");
-
-			shader.setBool("useTexture", texture != 0);
-			shader.setBool("useLighting", true);
-			shader.setVec2("textureScale", glm::vec2(1.0f));
-			shader.setVec3("objectColor", color);
-			shader.setFloat("materialShininess", shininess);
-			shader.setFloat("materialSpecularStrength", specularStrength);
-			shader.setFloat("materialMetallic", metallic);
-			shader.setMat4("model", model);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glBindVertexArray(vao);
-			glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-			glBindVertexArray(0);
-		}
-
-		void cleanup()
-		{
-			if (vbo)
-				glDeleteBuffers(1, &vbo);
-			if (vao)
-				glDeleteVertexArrays(1, &vao);
-			vbo = 0;
-			vao = 0;
-			vertexCount = 0;
-		}
-
-	private:
-		GLuint vao = 0;
-		GLuint vbo = 0;
-		GLsizei vertexCount = 0;
 	};
 
 	class Decor
@@ -102,19 +28,19 @@ namespace scene
 			metalTexture = loadTexture("./textures/blue_metal_plate_diff_1k.jpg");
 			shadeTexture = loadTexture("./textures/denim_fabric_04_diff_1k.jpg");
 
-			std::vector<LitTexturedVertex> metalVertices;
+			std::vector<TexturedVertex> metalVertices;
 			appendFrustum(metalVertices, 0.34f, 0.30f, 0.0f, 0.12f, 64, 2.0f);
 			appendFrustum(metalVertices, 0.055f, 0.045f, 0.11f, 1.98f, 32, 1.0f, false);
 			appendFrustum(metalVertices, 0.09f, 0.09f, 1.89f, 2.03f, 48, 1.0f);
 			appendFrustum(metalVertices, 0.485f, 0.485f, 1.95f, 2.02f, 64, 2.0f);
 			appendFrustum(metalVertices, 0.285f, 0.285f, 2.64f, 2.71f, 64, 2.0f);
-			metalMesh.initialize(metalVertices);
+			metalMesh = createTriangleMesh(metalVertices);
 
-			std::vector<LitTexturedVertex> shadeVertices;
+			std::vector<TexturedVertex> shadeVertices;
 			appendFrustum(shadeVertices, 0.45f, 0.26f, 1.98f, 2.68f, 64, 3.0f);
-			shadeMesh.initialize(shadeVertices);
+			shadeMesh = createTriangleMesh(shadeVertices);
 
-			std::vector<LitTexturedVertex> shelfVertices;
+			std::vector<TexturedVertex> shelfVertices;
 			const float shelfCenterY = ShelfHeight * 0.5f;
 			appendBox(shelfVertices,
 				glm::vec3(-ShelfWidth * 0.5f + ShelfPanelWidth * 0.5f, shelfCenterY, 0.0f),
@@ -132,10 +58,10 @@ namespace scene
 			for (float y : shelfLevels)
 				appendBox(shelfVertices, glm::vec3(0.0f, y, 0.0f),
 					glm::vec3(ShelfWidth, ShelfBoardHeight, ShelfDepth));
-			shelfMesh.initialize(shelfVertices);
+			shelfMesh = createTriangleMesh(shelfVertices);
 
-			std::array<std::vector<LitTexturedVertex>, 4> bookVertices;
-			std::vector<LitTexturedVertex> bookTrimVertices;
+			std::array<std::vector<TexturedVertex>, 4> bookVertices;
+			std::vector<TexturedVertex> bookTrimVertices;
 			const auto addBook = [&](size_t color, float x, float shelfY, float width, float height)
 			{
 				appendBook(bookVertices[color], bookTrimVertices,
@@ -169,8 +95,9 @@ namespace scene
 			}
 
 			for (size_t i = 0; i < bookMeshes.size(); ++i)
-				bookMeshes[i].initialize(bookVertices[i]);
-			bookTrimMesh.initialize(bookTrimVertices);
+				bookMeshes[i] = createTriangleMesh(bookVertices[i], bookColors[i]);
+			bookTrimMesh = createTriangleMesh(
+				bookTrimVertices, glm::vec3(0.9f, 0.62f, 0.18f));
 		}
 
 		void render(Shader& shader)
@@ -181,7 +108,6 @@ namespace scene
 			drawContactShadows(shader);
 			drawFloorShelf(shader);
 			drawFloorLamp(shader);
-			shader.setBool("useLighting", false);
 		}
 
 		void cleanup()
@@ -189,12 +115,12 @@ namespace scene
 			if (shadowQuad)
 				shadowQuad->deleteBuffers();
 			shadowQuad.reset();
-			metalMesh.cleanup();
-			shadeMesh.cleanup();
-			shelfMesh.cleanup();
-			bookTrimMesh.cleanup();
+			deleteMesh(metalMesh);
+			deleteMesh(shadeMesh);
+			deleteMesh(shelfMesh);
+			deleteMesh(bookTrimMesh);
 			for (auto& bookMesh : bookMeshes)
-				bookMesh.cleanup();
+				deleteMesh(bookMesh);
 			if (shadowTexture)
 				glDeleteTextures(1, &shadowTexture);
 			if (metalTexture)
@@ -226,55 +152,91 @@ namespace scene
 		{
 			const glm::mat4 model = glm::translate(glm::mat4(1.0f),
 				glm::vec3(ShelfX, ShelfFloorY, ShelfZ));
-			shelfMesh.draw(shader, metalTexture, model, glm::vec3(1.0f),
-				48.0f, 0.5f, 0.82f);
+			drawMesh(shader, *shelfMesh, metalTexture, model);
 			for (size_t i = 0; i < bookMeshes.size(); ++i)
-				bookMeshes[i].draw(shader, 0, model, bookColors[i], 24.0f, 0.22f, 0.04f);
-			bookTrimMesh.draw(shader, 0, model, glm::vec3(0.9f, 0.62f, 0.18f),
-				42.0f, 0.38f, 0.72f);
+				drawMesh(shader, *bookMeshes[i], 0, model);
+			drawMesh(shader, *bookTrimMesh, 0, model);
 		}
 
 		void drawFloorLamp(Shader& shader)
 		{
 			const glm::mat4 model = glm::translate(glm::mat4(1.0f),
 				glm::vec3(FloorLampX, FloorLampFloorY, FloorLampZ));
-			metalMesh.draw(shader, metalTexture, model, glm::vec3(1.0f),
-				56.0f, 0.56f, 0.9f);
-			shadeMesh.draw(shader, shadeTexture, model, glm::vec3(1.0f),
-				16.0f, 0.18f, 0.0f);
+			drawMesh(shader, *metalMesh, metalTexture, model);
+			drawMesh(shader, *shadeMesh, shadeTexture, model);
 		}
 
-		static LitTexturedVertex makeVertex(const glm::vec3& position,
-			const glm::vec3& normal, const glm::vec2& texCoord)
+		static std::unique_ptr<PolygonWithTexture> createTriangleMesh(
+			const std::vector<TexturedVertex>& vertices,
+			const glm::vec3& color = glm::vec3(1.0f))
 		{
-			return { position, normal, texCoord };
+			if (vertices.empty())
+				throw std::logic_error("Cannot initialize an empty textured mesh.");
+
+			std::vector<glm::vec3> positions;
+			std::vector<glm::vec2> texCoords;
+			positions.reserve(vertices.size());
+			texCoords.reserve(vertices.size());
+			for (const TexturedVertex& vertex : vertices)
+			{
+				positions.push_back(vertex.position);
+				texCoords.push_back(vertex.texCoord);
+			}
+			return std::make_unique<PolygonWithTexture>(
+				std::move(positions), std::move(texCoords), color, GL_TRIANGLES);
 		}
 
-		static void appendTriangle(std::vector<LitTexturedVertex>& vertices,
-			const LitTexturedVertex& a, const LitTexturedVertex& b,
-			const LitTexturedVertex& c)
+		static void drawMesh(Shader& shader, PolygonWithTexture& mesh, GLuint texture,
+			const glm::mat4& model)
+		{
+			shader.setBool("useTexture", texture != 0);
+			shader.setVec2("textureScale", glm::vec2(1.0f));
+			mesh.setTexture(texture);
+			mesh.transformation(model);
+			glActiveTexture(GL_TEXTURE0);
+			mesh.draw(shader);
+		}
+
+		static void deleteMesh(std::unique_ptr<PolygonWithTexture>& mesh)
+		{
+			if (mesh)
+			{
+				mesh->deleteBuffers();
+				mesh.reset();
+			}
+		}
+
+		static TexturedVertex makeVertex(const glm::vec3& position,
+			const glm::vec2& texCoord)
+		{
+			return { position, texCoord };
+		}
+
+		static void appendTriangle(std::vector<TexturedVertex>& vertices,
+			const TexturedVertex& a, const TexturedVertex& b,
+			const TexturedVertex& c)
 		{
 			vertices.push_back(a);
 			vertices.push_back(b);
 			vertices.push_back(c);
 		}
 
-		static void appendFace(std::vector<LitTexturedVertex>& vertices,
+		static void appendFace(std::vector<TexturedVertex>& vertices,
 			const glm::vec3& bottomLeft, const glm::vec3& bottomRight,
 			const glm::vec3& topRight, const glm::vec3& topLeft,
-			const glm::vec3& normal, const glm::vec2& uvSize)
+			const glm::vec2& uvSize)
 		{
-			const LitTexturedVertex a = makeVertex(bottomLeft, normal, glm::vec2(0.0f));
-			const LitTexturedVertex b = makeVertex(bottomRight, normal,
+			const TexturedVertex a = makeVertex(bottomLeft, glm::vec2(0.0f));
+			const TexturedVertex b = makeVertex(bottomRight,
 				glm::vec2(uvSize.x, 0.0f));
-			const LitTexturedVertex c = makeVertex(topRight, normal, uvSize);
-			const LitTexturedVertex d = makeVertex(topLeft, normal,
+			const TexturedVertex c = makeVertex(topRight, uvSize);
+			const TexturedVertex d = makeVertex(topLeft,
 				glm::vec2(0.0f, uvSize.y));
 			appendTriangle(vertices, a, b, c);
 			appendTriangle(vertices, a, c, d);
 		}
 
-		static void appendBox(std::vector<LitTexturedVertex>& vertices,
+		static void appendBox(std::vector<TexturedVertex>& vertices,
 			const glm::vec3& center, const glm::vec3& size)
 		{
 			const glm::vec3 half = size * 0.5f;
@@ -288,31 +250,31 @@ namespace scene
 			appendFace(vertices,
 				glm::vec3(left, bottom, front), glm::vec3(right, bottom, front),
 				glm::vec3(right, top, front), glm::vec3(left, top, front),
-				glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(size.x, size.y));
+				glm::vec2(size.x, size.y));
 			appendFace(vertices,
 				glm::vec3(left, bottom, back), glm::vec3(right, bottom, back),
 				glm::vec3(right, top, back), glm::vec3(left, top, back),
-				glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(size.x, size.y));
+				glm::vec2(size.x, size.y));
 			appendFace(vertices,
 				glm::vec3(left, bottom, back), glm::vec3(left, bottom, front),
 				glm::vec3(left, top, front), glm::vec3(left, top, back),
-				glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(size.z, size.y));
+				glm::vec2(size.z, size.y));
 			appendFace(vertices,
 				glm::vec3(right, bottom, front), glm::vec3(right, bottom, back),
 				glm::vec3(right, top, back), glm::vec3(right, top, front),
-				glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(size.z, size.y));
+				glm::vec2(size.z, size.y));
 			appendFace(vertices,
 				glm::vec3(left, top, back), glm::vec3(right, top, back),
 				glm::vec3(right, top, front), glm::vec3(left, top, front),
-				glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(size.x, size.z));
+				glm::vec2(size.x, size.z));
 			appendFace(vertices,
 				glm::vec3(left, bottom, front), glm::vec3(right, bottom, front),
 				glm::vec3(right, bottom, back), glm::vec3(left, bottom, back),
-				glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(size.x, size.z));
+				glm::vec2(size.x, size.z));
 		}
 
-		static void appendBook(std::vector<LitTexturedVertex>& vertices,
-			std::vector<LitTexturedVertex>& trimVertices, const glm::vec3& center,
+		static void appendBook(std::vector<TexturedVertex>& vertices,
+			std::vector<TexturedVertex>& trimVertices, const glm::vec3& center,
 			const glm::vec3& size)
 		{
 			appendBox(vertices, center, size);
@@ -371,12 +333,11 @@ namespace scene
 			return texture;
 		}
 
-		static void appendCap(std::vector<LitTexturedVertex>& vertices, float radius,
+		static void appendCap(std::vector<TexturedVertex>& vertices, float radius,
 			float y, int segments, bool top)
 		{
-			const glm::vec3 normal(0.0f, top ? 1.0f : -1.0f, 0.0f);
-			const LitTexturedVertex center = makeVertex(glm::vec3(0.0f, y, 0.0f),
-				normal, glm::vec2(0.5f));
+			const TexturedVertex center = makeVertex(
+				glm::vec3(0.0f, y, 0.0f), glm::vec2(0.5f));
 			for (int i = 0; i < segments; ++i)
 			{
 				const float angle0 = 2.0f * Pi * static_cast<float>(i) / segments;
@@ -385,10 +346,10 @@ namespace scene
 					radius * std::sin(angle0));
 				const glm::vec3 point1(radius * std::cos(angle1), y,
 					radius * std::sin(angle1));
-				const LitTexturedVertex ring0 = makeVertex(point0, normal,
+				const TexturedVertex ring0 = makeVertex(point0,
 					glm::vec2(0.5f + 0.5f * std::cos(angle0),
 						0.5f + 0.5f * std::sin(angle0)));
-				const LitTexturedVertex ring1 = makeVertex(point1, normal,
+				const TexturedVertex ring1 = makeVertex(point1,
 					glm::vec2(0.5f + 0.5f * std::cos(angle1),
 						0.5f + 0.5f * std::sin(angle1)));
 				if (top)
@@ -398,38 +359,31 @@ namespace scene
 			}
 		}
 
-		static void appendFrustum(std::vector<LitTexturedVertex>& vertices,
+		static void appendFrustum(std::vector<TexturedVertex>& vertices,
 			float bottomRadius, float topRadius, float bottomY, float topY,
 			int segments, float horizontalRepeats, bool caps = true)
 		{
 			const float height = topY - bottomY;
-			const float normalY = (bottomRadius - topRadius) / height;
 			const float verticalRepeats = height / 0.7f;
 			for (int i = 0; i < segments; ++i)
 			{
 				const float angle0 = 2.0f * Pi * static_cast<float>(i) / segments;
 				const float angle1 = 2.0f * Pi * static_cast<float>(i + 1) / segments;
-				const glm::vec3 normal0 = glm::normalize(
-					glm::vec3(std::cos(angle0), normalY, std::sin(angle0)));
-				const glm::vec3 normal1 = glm::normalize(
-					glm::vec3(std::cos(angle1), normalY, std::sin(angle1)));
 				const float u0 = horizontalRepeats * static_cast<float>(i) / segments;
 				const float u1 = horizontalRepeats * static_cast<float>(i + 1) / segments;
 
-				const LitTexturedVertex bottom0 = makeVertex(
+				const TexturedVertex bottom0 = makeVertex(
 					glm::vec3(bottomRadius * std::cos(angle0), bottomY,
-						bottomRadius * std::sin(angle0)), normal0, glm::vec2(u0, 0.0f));
-				const LitTexturedVertex bottom1 = makeVertex(
+						bottomRadius * std::sin(angle0)), glm::vec2(u0, 0.0f));
+				const TexturedVertex bottom1 = makeVertex(
 					glm::vec3(bottomRadius * std::cos(angle1), bottomY,
-						bottomRadius * std::sin(angle1)), normal1, glm::vec2(u1, 0.0f));
-				const LitTexturedVertex top0 = makeVertex(
+						bottomRadius * std::sin(angle1)), glm::vec2(u1, 0.0f));
+				const TexturedVertex top0 = makeVertex(
 					glm::vec3(topRadius * std::cos(angle0), topY,
-						topRadius * std::sin(angle0)), normal0,
-					glm::vec2(u0, verticalRepeats));
-				const LitTexturedVertex top1 = makeVertex(
+						topRadius * std::sin(angle0)), glm::vec2(u0, verticalRepeats));
+				const TexturedVertex top1 = makeVertex(
 					glm::vec3(topRadius * std::cos(angle1), topY,
-						topRadius * std::sin(angle1)), normal1,
-					glm::vec2(u1, verticalRepeats));
+						topRadius * std::sin(angle1)), glm::vec2(u1, verticalRepeats));
 				appendTriangle(vertices, bottom0, top0, top1);
 				appendTriangle(vertices, bottom0, top1, bottom1);
 			}
@@ -441,11 +395,11 @@ namespace scene
 		}
 
 		std::unique_ptr<PolygonWithTexture> shadowQuad;
-		LitTexturedMesh metalMesh;
-		LitTexturedMesh shadeMesh;
-		LitTexturedMesh shelfMesh;
-		std::array<LitTexturedMesh, 4> bookMeshes;
-		LitTexturedMesh bookTrimMesh;
+		std::unique_ptr<PolygonWithTexture> metalMesh;
+		std::unique_ptr<PolygonWithTexture> shadeMesh;
+		std::unique_ptr<PolygonWithTexture> shelfMesh;
+		std::array<std::unique_ptr<PolygonWithTexture>, 4> bookMeshes;
+		std::unique_ptr<PolygonWithTexture> bookTrimMesh;
 		GLuint metalTexture = 0;
 		GLuint shadeTexture = 0;
 		GLuint shadowTexture = 0;

@@ -85,10 +85,8 @@ namespace scene
 					[](const Texture& texture) { return texture.type == "texture_diffuse"; });
 				shader.setBool("useTexture", hasDiffuseTexture);
 				shader.setVec3("objectColor", materialColors[i]);
-				shader.setBool("useSofaBodyTones", materialNames[i] == "m_sofa");
 				model->meshes[i].Draw(shader);
 			}
-			shader.setBool("useSofaBodyTones", false);
 			glActiveTexture(GL_TEXTURE0);
 		}
 

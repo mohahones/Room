@@ -21,18 +21,17 @@ namespace
 {
 	constexpr int WindowWidth = 1280;
 	constexpr int WindowHeight = 720;
+	constexpr float NearPlane = 0.1f;
+	constexpr float FarPlane = 60.0f;
 
 	GLFWwindow* window = nullptr;
 	int framebufferWidth = WindowWidth;
 	int framebufferHeight = WindowHeight;
 	bool oneKeyDown = false;
 	bool twoKeyDown = false;
-	bool threeKeyDown = false;
 	bool gKeyDown = false;
 	bool playerView = false;
-	bool roomView = true;
 	float cameraBlend = 0.0f;
-	float roomBlend = 0.0f;
 	float lastFrame = 0.0f;
 
 	void processInput(scene::Animation& animation)
@@ -44,7 +43,6 @@ namespace
 		if (onePressed && !oneKeyDown)
 		{
 			playerView = false;
-			roomView = false;
 		}
 		oneKeyDown = onePressed;
 
@@ -52,17 +50,8 @@ namespace
 		if (twoPressed && !twoKeyDown)
 		{
 			playerView = true;
-			roomView = false;
 		}
 		twoKeyDown = twoPressed;
-
-		const bool threePressed = glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS;
-		if (threePressed && !threeKeyDown)
-		{
-			playerView = false;
-			roomView = true;
-		}
-		threeKeyDown = threePressed;
 
 		const bool gPressed = glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS;
 		if (gPressed && !gKeyDown)
@@ -115,7 +104,7 @@ int main(int, char* argv[])
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	window = glfwCreateWindow(WindowWidth, WindowHeight,
-		"Card Table | 1: overhead  2: player view  3: room view  G: play", nullptr, nullptr);
+		"Card Table | 1: overhead  2: player view  G: play", nullptr, nullptr);
 	if (!window)
 	{
 		std::cerr << "Failed to create the OpenGL window.\n";
@@ -156,8 +145,6 @@ int main(int, char* argv[])
 	}
 	shader.use();
 	shader.setInt("texture_diffuse1", 0);
-	shader.setBool("useLighting", false);
-	shader.setBool("useSofaBodyTones", false);
 
 	scene::Room room;
 	scene::Table table;
@@ -197,39 +184,28 @@ int main(int, char* argv[])
 			animation.update(deltaTime);
 			cameraBlend += ((playerView ? 1.0f : 0.0f) - cameraBlend) *
 				cameraStep;
-			roomBlend += ((roomView ? 1.0f : 0.0f) - roomBlend) * cameraStep;
 
 			glClearColor(0.035f, 0.04f, 0.055f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			shader.use();
 
 			const float aspect = static_cast<float>(framebufferWidth) / framebufferHeight;
-			constexpr float overheadHalfHeight = 6.5f;
-			const glm::mat4 overhead = glm::ortho(
-				-overheadHalfHeight * aspect, overheadHalfHeight * aspect,
-				-overheadHalfHeight, overheadHalfHeight, 0.1f, 60.0f);
-			const glm::mat4 perspectiveProjection =
-				glm::perspective(glm::radians(55.0f), aspect, 0.1f, 60.0f);
-			const float overheadWeight = (1.0f - roomBlend) * (1.0f - cameraBlend);
-			const float playerWeight = (1.0f - roomBlend) * cameraBlend;
-			const float roomWeight = roomBlend;
-			const float perspectiveWeight = playerWeight + roomWeight;
-			shader.setMat4("projection",
-				overhead * overheadWeight + perspectiveProjection * perspectiveWeight);
+			const glm::mat4 projection = glm::perspective(
+				glm::radians(55.0f), aspect, NearPlane, FarPlane);
+			shader.setMat4("projection", projection);
 
+			const float overheadWeight = 1.0f - cameraBlend;
+			const float playerWeight = cameraBlend;
+			const float perspectiveWeight = cameraBlend;
 			const glm::vec3 overheadEye(0.0f, 12.0f, scene::TableDepthOffset);
 			const glm::vec3 playerEye(0.0f, 3.6f, 7.4f + scene::TableDepthOffset);
-			const glm::vec3 roomEye(0.0f, 12.0f, 18.0f);
 			const glm::vec3 overheadTarget(0.0f, 0.0f, scene::TableDepthOffset);
 			const glm::vec3 playerTarget(0.0f, 0.8f, -1.0f + scene::TableDepthOffset);
-			const glm::vec3 roomTarget(0.0f, 1.0f, -4.5f);
 			const glm::vec3 overheadUp(0.0f, 0.0f, -1.0f);
 			const glm::vec3 playerUp(0.0f, 1.0f, 0.0f);
-			const glm::vec3 eye = overheadEye * overheadWeight +
-				playerEye * playerWeight + roomEye * roomWeight;
+			const glm::vec3 eye = overheadEye * overheadWeight + playerEye * playerWeight;
 			const glm::vec3 target = overheadTarget * overheadWeight +
-				playerTarget * playerWeight + roomTarget * roomWeight;
-			shader.setVec3("viewPosition", eye);
+				playerTarget * playerWeight;
 			const glm::vec3 up = glm::normalize(
 				overheadUp * overheadWeight + playerUp * perspectiveWeight);
 			shader.setMat4("view", glm::lookAt(eye, target, up));

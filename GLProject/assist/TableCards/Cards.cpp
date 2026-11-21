@@ -36,7 +36,6 @@ namespace scene
 				throw std::logic_error("A card polygon, face texture, or back texture is missing.");
 
 			shader.setBool("useTexture", true);
-			shader.setBool("useLighting", false);
 			shader.setVec2("textureScale", glm::vec2(1.0f));
 			GLuint texture = cardBackTexture;
 			cardQuads[index]->setTexture(texture);

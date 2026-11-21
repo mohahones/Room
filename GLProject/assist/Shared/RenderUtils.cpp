@@ -103,7 +103,6 @@ namespace scene
 		if (!texture)
 			throw std::logic_error("Cannot draw a textured polygon without a valid texture.");
 		shader.setBool("useTexture", true);
-		shader.setBool("useLighting", false);
 		shader.setVec2("textureScale", uvScale);
 		polygon.setTexture(texture);
 		polygon.transformation(model);
@@ -127,7 +126,6 @@ namespace scene
 			glm::rotate(glm::mat4(1.0f), -Pi * 0.5f, glm::vec3(1.0f, 0.0f, 0.0f)) *
 			glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
 		shader.setBool("useTexture", false);
-		shader.setBool("useLighting", false);
 		polygon.transformation(model);
 		polygon.draw(shader);
 	}
