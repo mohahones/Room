@@ -2,438 +2,485 @@
 
 #include "../Shared/RenderUtils.cpp"
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cmath>
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace scene
 {
+	struct TexturedVertex
+	{
+		glm::vec3 position;
+		glm::vec2 texCoord;
+	};
+
+	class TexturedTriangleMesh
+	{
+	public:
+		void initialize(const std::vector<TexturedVertex> &vertices)
+		{
+			if (vertices.empty())
+				throw std::logic_error("Cannot initialize an empty decor mesh.");
+
+			glGenVertexArrays(1, &vao);
+			glGenBuffers(1, &vbo);
+			if (!vao || !vbo)
+			{
+				cleanup();
+				throw std::runtime_error("Failed to allocate decor mesh buffers.");
+			}
+
+			glBindVertexArray(vao);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER,
+						 static_cast<GLsizeiptr>(vertices.size() * sizeof(TexturedVertex)),
+						 vertices.data(), GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+								  sizeof(TexturedVertex),
+								  reinterpret_cast<void *>(offsetof(TexturedVertex, position)));
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+								  sizeof(TexturedVertex),
+								  reinterpret_cast<void *>(offsetof(TexturedVertex, texCoord)));
+			glEnableVertexAttribArray(2);
+			glBindVertexArray(0);
+			vertexCount = static_cast<GLsizei>(vertices.size());
+		}
+
+		void draw(Shader &shader, GLuint texture, const glm::mat4 &model,
+				  const glm::vec3 &color) const
+		{
+			if (!vao || vertexCount <= 0)
+				throw std::logic_error("Decor triangle mesh was not initialized.");
+
+			shader.setBool("useTexture", texture != 0);
+			shader.setVec2("textureScale", glm::vec2(1.0f));
+			shader.setVec3("objectColor", color);
+			shader.setMat4("model", model);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+			glBindVertexArray(0);
+		}
+
+		void cleanup()
+		{
+			if (vbo)
+				glDeleteBuffers(1, &vbo);
+			if (vao)
+				glDeleteVertexArrays(1, &vao);
+			vbo = 0;
+			vao = 0;
+			vertexCount = 0;
+		}
+
+	private:
+		GLuint vao = 0;
+		GLuint vbo = 0;
+		GLsizei vertexCount = 0;
+	};
+
 	class Decor
 	{
 	public:
 		void initialize()
 		{
-			const std::vector<glm::vec3> squareVertices = {
-				glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.5f, -0.5f, 0.0f),
-				glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(-0.5f, 0.5f, 0.0f)
-			};
-			const std::vector<glm::vec2> squareTexcoords = {
-				glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f),
-				glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 1.0f)
-			};
-
-			texturedQuad = new PolygonWithTexture(squareVertices, squareTexcoords);
-			for (size_t i = 0; i < bookQuads.size(); ++i)
-				bookQuads[i] = new Polygon(squareVertices, BookColors[i]);
-
-			std::vector<glm::vec3> topVertices = {
-				glm::vec3(0.0f, LampBaseTopY, 0.0f)
-			};
-			for (size_t i = 0; i <= LampBaseSegments; ++i)
-			{
-				const float angle =
-					2.0f * Pi * static_cast<float>(i) /
-					static_cast<float>(LampBaseSegments);
-				topVertices.emplace_back(
-					LampBaseRadius * std::cos(angle),
-					LampBaseTopY,
-					LampBaseRadius * std::sin(angle));
-			}
-			lampBaseTop = new Polygon(topVertices, LampBaseColor);
-
-			for (size_t i = 0; i < lampBaseSides.size(); ++i)
-			{
-				const float angle0 =
-					2.0f * Pi * static_cast<float>(i) /
-					static_cast<float>(LampBaseSegments);
-				const float angle1 =
-					2.0f * Pi * static_cast<float>(i + 1) /
-					static_cast<float>(LampBaseSegments);
-				const std::vector<glm::vec3> sideVertices = {
-					glm::vec3(LampBaseRadius * std::cos(angle0),
-						LampBaseBottomY, LampBaseRadius * std::sin(angle0)),
-					glm::vec3(LampBaseRadius * std::cos(angle1),
-						LampBaseBottomY, LampBaseRadius * std::sin(angle1)),
-					glm::vec3(LampBaseRadius * std::cos(angle1),
-						LampBaseTopY, LampBaseRadius * std::sin(angle1)),
-					glm::vec3(LampBaseRadius * std::cos(angle0),
-						LampBaseTopY, LampBaseRadius * std::sin(angle0))
-				};
-				lampBaseSides[i] = new Polygon(sideVertices, LampBaseColor);
-			}
-
-			for (size_t i = 0; i < shadeSegments.size(); ++i)
-			{
-				const float angle0 = 2.0f * Pi * static_cast<float>(i) /
-					static_cast<float>(shadeSegments.size());
-				const float angle1 = 2.0f * Pi * static_cast<float>(i + 1) /
-					static_cast<float>(shadeSegments.size());
-				const float u0 = static_cast<float>(i) /
-					static_cast<float>(shadeSegments.size());
-				const float u1 = static_cast<float>(i + 1) /
-					static_cast<float>(shadeSegments.size());
-				const std::vector<glm::vec3> segmentVertices = {
-					glm::vec3(ShadeBottomRadius * std::cos(angle0),
-						ShadeBottomY, ShadeBottomRadius * std::sin(angle0)),
-					glm::vec3(ShadeBottomRadius * std::cos(angle1),
-						ShadeBottomY, ShadeBottomRadius * std::sin(angle1)),
-					glm::vec3(ShadeTopRadius * std::cos(angle1),
-						ShadeTopY, ShadeTopRadius * std::sin(angle1)),
-					glm::vec3(ShadeTopRadius * std::cos(angle0),
-						ShadeTopY, ShadeTopRadius * std::sin(angle0))
-				};
-				const std::vector<glm::vec2> segmentTexcoords = {
-					glm::vec2(u0, 0.0f), glm::vec2(u1, 0.0f),
-					glm::vec2(u1, 1.0f), glm::vec2(u0, 1.0f)
-				};
-				shadeSegments[i] = new PolygonWithTexture(segmentVertices,
-					segmentTexcoords);
-			}
-
+			shadowQuad = createTexturedQuad();
+			shadowTexture = createContactShadowTexture();
 			metalTexture = loadTexture("./textures/blue_metal_plate_diff_1k.jpg");
 			shadeTexture = loadTexture("./textures/denim_fabric_04_diff_1k.jpg");
+
+			std::vector<TexturedVertex> metalVertices;
+			appendFrustum(metalVertices, 0.34f, 0.30f, 0.0f, 0.12f, 24, 2.0f);
+			appendFrustum(metalVertices, 0.055f, 0.045f, 0.11f, 1.98f, 16, 1.0f, false);
+			appendFrustum(metalVertices, 0.09f, 0.09f, 1.89f, 2.03f, 16, 1.0f);
+			appendFrustum(metalVertices, 0.485f, 0.485f, 1.95f, 2.02f, 24, 2.0f);
+			appendFrustum(metalVertices, 0.285f, 0.285f, 2.64f, 2.71f, 24, 2.0f);
+			metalMesh.initialize(metalVertices);
+
+			std::vector<TexturedVertex> shadeVertices;
+			appendFrustum(shadeVertices, 0.45f, 0.26f, 1.98f, 2.68f, 20, 3.0f);
+			shadeMesh.initialize(shadeVertices);
+
+			std::vector<TexturedVertex> shelfVertices;
+			const float shelfCenterY = ShelfHeight * 0.5f;
+			appendBox(shelfVertices,
+					  glm::vec3(-ShelfWidth * 0.5f + ShelfPanelWidth * 0.5f,
+								shelfCenterY, 0.0f),
+					  glm::vec3(ShelfPanelWidth, ShelfHeight, ShelfDepth));
+			appendBox(shelfVertices,
+					  glm::vec3(ShelfWidth * 0.5f - ShelfPanelWidth * 0.5f,
+								shelfCenterY, 0.0f),
+					  glm::vec3(ShelfPanelWidth, ShelfHeight, ShelfDepth));
+			appendBox(shelfVertices,
+					  glm::vec3(0.0f, shelfCenterY, -ShelfDepth * 0.5f - 0.05f),
+					  glm::vec3(ShelfWidth - ShelfPanelWidth * 2.0f,
+								ShelfHeight, 0.1f));
+			const std::array<float, 6> shelfLevels = {
+				0.08f, 1.30f, 2.52f, 3.74f, 4.96f,
+				ShelfHeight - ShelfBoardHeight * 0.5f};
+			for (float y : shelfLevels)
+				appendBox(shelfVertices, glm::vec3(0.0f, y, 0.0f),
+						  glm::vec3(ShelfWidth, ShelfBoardHeight, ShelfDepth));
+			shelfMesh.initialize(shelfVertices);
+
+			std::array<std::vector<TexturedVertex>, 4> bookVertices;
+			std::vector<TexturedVertex> bookTrimVertices;
+			const auto addBook = [&](size_t color, float x, float shelfY,
+									 float width, float height)
+			{
+				appendBook(bookVertices[color], bookTrimVertices,
+						   glm::vec3(x, shelfY + ShelfBoardHeight * 0.5f + height * 0.5f, 0.42f),
+						   glm::vec3(width, height, 0.64f));
+			};
+
+			constexpr size_t BooksPerShelf = 32;
+			constexpr float BookGap = 0.012f;
+			constexpr float MinimumBookWidth = 0.14f;
+			constexpr float BookWidthVariation = 0.01f;
+			const float innerHalfWidth =
+				(ShelfWidth - ShelfPanelWidth * 2.0f) * 0.5f;
+
+			float totalBookWidth = 0.0f;
+			for (size_t i = 0; i < BooksPerShelf; ++i)
+				totalBookWidth += MinimumBookWidth +
+								  BookWidthVariation * static_cast<float>(i % 4);
+			const float rowWidth = totalBookWidth +
+								   BookGap * static_cast<float>(BooksPerShelf - 1);
+			const float rowStart =
+				-innerHalfWidth + (innerHalfWidth * 2.0f - rowWidth) * 0.5f;
+
+			for (size_t row = 0; row < 5; ++row)
+			{
+				float bookLeft = rowStart;
+				for (size_t i = 0; i < BooksPerShelf; ++i)
+				{
+					const float bookWidth = MinimumBookWidth +
+											BookWidthVariation * static_cast<float>(i % 4);
+					const float bookHeight =
+						0.84f + 0.035f * static_cast<float>(i % 5);
+					addBook((i + row * 2) % bookVertices.size(),
+							bookLeft + bookWidth * 0.5f,
+							shelfLevels[row], bookWidth, bookHeight);
+					bookLeft += bookWidth + BookGap;
+				}
+			}
+
+			for (size_t i = 0; i < bookMeshes.size(); ++i)
+				bookMeshes[i].initialize(bookVertices[i]);
+			bookTrimMesh.initialize(bookTrimVertices);
 		}
 
-		void render(Shader& shader)
+		void render(Shader &shader)
 		{
-			if (!texturedQuad)
+			if (!shadowQuad)
 				throw std::logic_error("Decor polygons were not initialized.");
 
-			drawBookshelf(shader);
+			drawContactShadows(shader);
+			drawFloorShelf(shader);
 			drawFloorLamp(shader);
+			shader.setBool("useTexture", false);
 		}
 
 		void cleanup()
 		{
-			if (texturedQuad)
-			{
-				texturedQuad->deleteBuffers();
-				delete texturedQuad;
-				texturedQuad = nullptr;
-			}
-			for (PolygonWithTexture* shadeSegment : shadeSegments)
-			{
-				if (shadeSegment)
-				{
-					shadeSegment->deleteBuffers();
-					delete shadeSegment;
-					shadeSegment = nullptr;
-				}
-			}
-			for (Polygon* bookQuad : bookQuads)
-			{
-				if (bookQuad)
-				{
-					bookQuad->deleteBuffers();
-					delete bookQuad;
-					bookQuad = nullptr;
-				}
-			}
-			if (lampBaseTop)
-			{
-				lampBaseTop->deleteBuffers();
-				delete lampBaseTop;
-				lampBaseTop = nullptr;
-			}
-			for (Polygon* side : lampBaseSides)
-			{
-				if (side)
-				{
-					side->deleteBuffers();
-					delete side;
-					side = nullptr;
-				}
-			}
+			if (shadowQuad)
+				shadowQuad->deleteBuffers();
+			shadowQuad.reset();
+
+			metalMesh.cleanup();
+			shadeMesh.cleanup();
+			shelfMesh.cleanup();
+			bookTrimMesh.cleanup();
+			for (TexturedTriangleMesh &bookMesh : bookMeshes)
+				bookMesh.cleanup();
+
+			if (shadowTexture)
+				glDeleteTextures(1, &shadowTexture);
 			if (metalTexture)
 				glDeleteTextures(1, &metalTexture);
 			if (shadeTexture)
 				glDeleteTextures(1, &shadeTexture);
+			shadowTexture = 0;
 			metalTexture = 0;
 			shadeTexture = 0;
 		}
 
 	private:
-		void drawBookshelf(Shader& shader)
+		void drawContactShadows(Shader &shader)
 		{
-			const glm::mat4 shelfBase =
-				glm::translate(glm::mat4(1.0f),
-					glm::vec3(ShelfX, ShelfFloorY, ShelfZ));
-
-			// Upright back and side panels.
-			drawTexturedPanel(shader, shelfBase, metalTexture,
-				glm::vec3(0.0f, (ShelfHeight + ShelfBoardHeight) * 0.5f,
-					-ShelfDepth * 0.5f),
-				glm::vec3(ShelfWidth, ShelfHeight + ShelfBoardHeight, 1.0f),
-				glm::vec3(0.0f));
-			drawTexturedPanel(shader, shelfBase, metalTexture,
-				glm::vec3(-ShelfWidth * 0.5f,
-					(ShelfHeight + ShelfBoardHeight) * 0.5f, 0.0f),
-				glm::vec3(ShelfDepth, ShelfHeight + ShelfBoardHeight, 1.0f),
-				glm::vec3(0.0f, -Pi * 0.5f, 0.0f));
-			drawTexturedPanel(shader, shelfBase, metalTexture,
-				glm::vec3(ShelfWidth * 0.5f,
-					(ShelfHeight + ShelfBoardHeight) * 0.5f, 0.0f),
-				glm::vec3(ShelfDepth, ShelfHeight + ShelfBoardHeight, 1.0f),
-				glm::vec3(0.0f, Pi * 0.5f, 0.0f));
-
-			// Bottom and divider shelves.
-			const std::array<float, 5> shelfLevels = {
-				0.06f, 1.25f, 2.44f, 3.63f, 4.82f
-			};
-			for (float y : shelfLevels)
-				drawHorizontalTexturedPanel(shader, shelfBase, metalTexture,
-					glm::vec3(0.0f, y, 0.0f),
-					glm::vec2(ShelfWidth, ShelfDepth));
-
-			drawTopCap(shader, shelfBase, metalTexture);
-
-			// Narrow front uprights make the frame read cleanly.
-			for (float x : { -ShelfWidth * 0.5f + 0.11f,
-				ShelfWidth * 0.5f - 0.11f })
-				drawTexturedPanel(shader, shelfBase, metalTexture,
-					glm::vec3(x, (ShelfHeight + ShelfBoardHeight) * 0.5f,
-						ShelfDepth * 0.5f),
-					glm::vec3(0.22f, ShelfHeight + ShelfBoardHeight, 1.0f),
-					glm::vec3(0.0f));
-
-			drawBooks(shader, shelfBase, shelfLevels);
+			glDepthMask(GL_FALSE);
+			drawHorizontalTexture(shader, *shadowQuad, shadowTexture,
+								  glm::vec3(ShelfX, ShelfFloorY + 0.004f, ShelfZ),
+								  glm::vec2(ShelfWidth + 0.72f, ShelfDepth + 0.62f));
+			drawHorizontalTexture(shader, *shadowQuad, shadowTexture,
+								  glm::vec3(FloorLampX, FloorLampFloorY + 0.004f, FloorLampZ),
+								  glm::vec2(1.52f, 1.52f));
+			glDepthMask(GL_TRUE);
 		}
 
-		void drawBooks(Shader& shader, const glm::mat4& shelfBase,
-			const std::array<float, 5>& shelfLevels)
+		void drawFloorShelf(Shader &shader)
 		{
-			const float innerLeft = -ShelfWidth * 0.5f + 0.42f;
-			const float innerRight = ShelfWidth * 0.5f - 0.42f;
-			constexpr size_t BooksPerRow = 10;
-			constexpr float BookGap = 0.085f;
-			const float rowWidth = innerRight - innerLeft;
-			const float bookWidth =
-				(rowWidth - BookGap * static_cast<float>(BooksPerRow - 1)) /
-				static_cast<float>(BooksPerRow);
+			const glm::mat4 model = glm::translate(glm::mat4(1.0f),
+												   glm::vec3(ShelfX, ShelfFloorY, ShelfZ));
+			shelfMesh.draw(shader, metalTexture, model,
+						   glm::vec3(1.0f));
+			for (size_t i = 0; i < bookMeshes.size(); ++i)
+				bookMeshes[i].draw(shader, 0, model, BookColors[i]);
+			bookTrimMesh.draw(shader, 0, model,
+							  glm::vec3(0.9f, 0.62f, 0.18f));
+		}
 
-			for (size_t row = 0; row < 5; ++row)
-			{
-				const float shelfY = shelfLevels[row] + ShelfBoardHeight * 0.5f;
-				for (size_t i = 0; i < BooksPerRow; ++i)
+		void drawFloorLamp(Shader &shader)
+		{
+			const glm::mat4 model = glm::translate(glm::mat4(1.0f),
+												   glm::vec3(FloorLampX, FloorLampFloorY, FloorLampZ));
+			metalMesh.draw(shader, metalTexture, model,
+						   glm::vec3(1.0f));
+			shadeMesh.draw(shader, shadeTexture, model,
+						   glm::vec3(1.0f));
+		}
+
+		static TexturedVertex makeVertex(const glm::vec3 &position,
+										 const glm::vec2 &texCoord)
+		{
+			return {position, texCoord};
+		}
+
+		static void appendTriangle(std::vector<TexturedVertex> &vertices,
+								   const TexturedVertex &a, const TexturedVertex &b,
+								   const TexturedVertex &c)
+		{
+			vertices.push_back(a);
+			vertices.push_back(b);
+			vertices.push_back(c);
+		}
+
+		static void appendFace(std::vector<TexturedVertex> &vertices,
+							   const glm::vec3 &bottomLeft, const glm::vec3 &bottomRight,
+							   const glm::vec3 &topRight, const glm::vec3 &topLeft,
+							   const glm::vec2 &uvSize)
+		{
+			const TexturedVertex a = makeVertex(bottomLeft, glm::vec2(0.0f));
+			const TexturedVertex b = makeVertex(bottomRight,
+												glm::vec2(uvSize.x, 0.0f));
+			const TexturedVertex c = makeVertex(topRight, uvSize);
+			const TexturedVertex d = makeVertex(topLeft,
+												glm::vec2(0.0f, uvSize.y));
+			appendTriangle(vertices, a, b, c);
+			appendTriangle(vertices, a, c, d);
+		}
+
+		static void appendBox(std::vector<TexturedVertex> &vertices,
+							  const glm::vec3 &center, const glm::vec3 &size)
+		{
+			const glm::vec3 half = size * 0.5f;
+			const float left = center.x - half.x;
+			const float right = center.x + half.x;
+			const float bottom = center.y - half.y;
+			const float top = center.y + half.y;
+			const float back = center.z - half.z;
+			const float front = center.z + half.z;
+
+			appendFace(vertices,
+					   glm::vec3(left, bottom, front), glm::vec3(right, bottom, front),
+					   glm::vec3(right, top, front), glm::vec3(left, top, front),
+					   glm::vec2(size.x, size.y));
+			appendFace(vertices,
+					   glm::vec3(left, bottom, back), glm::vec3(right, bottom, back),
+					   glm::vec3(right, top, back), glm::vec3(left, top, back),
+					   glm::vec2(size.x, size.y));
+			appendFace(vertices,
+					   glm::vec3(left, bottom, back), glm::vec3(left, bottom, front),
+					   glm::vec3(left, top, front), glm::vec3(left, top, back),
+					   glm::vec2(size.z, size.y));
+			appendFace(vertices,
+					   glm::vec3(right, bottom, front), glm::vec3(right, bottom, back),
+					   glm::vec3(right, top, back), glm::vec3(right, top, front),
+					   glm::vec2(size.z, size.y));
+			appendFace(vertices,
+					   glm::vec3(left, top, back), glm::vec3(right, top, back),
+					   glm::vec3(right, top, front), glm::vec3(left, top, front),
+					   glm::vec2(size.x, size.z));
+			appendFace(vertices,
+					   glm::vec3(left, bottom, front), glm::vec3(right, bottom, front),
+					   glm::vec3(right, bottom, back), glm::vec3(left, bottom, back),
+					   glm::vec2(size.x, size.z));
+		}
+
+		static void appendBook(std::vector<TexturedVertex> &vertices,
+							   std::vector<TexturedVertex> &trimVertices,
+							   const glm::vec3 &center, const glm::vec3 &size)
+		{
+			appendBox(vertices, center, size);
+			const float front = center.z + size.z * 0.5f + 0.006f;
+			appendBox(trimVertices,
+					  glm::vec3(center.x, center.y + size.y * 0.34f, front),
+					  glm::vec3(size.x * 0.72f, 0.018f, 0.012f));
+			appendBox(trimVertices,
+					  glm::vec3(center.x, center.y - size.y * 0.34f, front),
+					  glm::vec3(size.x * 0.72f, 0.018f, 0.012f));
+			appendBox(trimVertices,
+					  glm::vec3(center.x - size.x * 0.36f, center.y, front + 0.006f),
+					  glm::vec3(0.012f, size.y * 0.84f, 0.012f));
+		}
+
+		static GLuint createContactShadowTexture()
+		{
+			constexpr int ShadowSize = 128;
+			std::vector<unsigned char> pixels(
+				static_cast<size_t>(ShadowSize * ShadowSize * 4));
+			for (int y = 0; y < ShadowSize; ++y)
+				for (int x = 0; x < ShadowSize; ++x)
 				{
-					const size_t variation = (i + row * 3) % 5;
-					const float height = 0.76f + 0.075f *
-						static_cast<float>((i + row) % 4);
-					const float width = bookWidth *
-						(0.88f + 0.025f * static_cast<float>(variation));
-					const float x = innerLeft + bookWidth * (i + 0.5f) +
-						BookGap * static_cast<float>(i);
-					const float depth = 0.34f +
-						0.04f * static_cast<float>((i + row) % 3);
-					Polygon* bookQuad = bookQuads[(i + row) % bookQuads.size()];
-
-					shader.setBool("useTexture", false);
-					drawBookBox(shader, bookQuad, shelfBase,
-						glm::vec3(x, shelfY + height * 0.5f,
-							ShelfDepth * 0.42f),
-						glm::vec3(width, height, depth));
+					const float dx =
+						(static_cast<float>(x) + 0.5f) /
+							static_cast<float>(ShadowSize) * 2.0f -
+						1.0f;
+					const float dy =
+						(static_cast<float>(y) + 0.5f) /
+							static_cast<float>(ShadowSize) * 2.0f -
+						1.0f;
+					const float radius = std::sqrt(dx * dx + dy * dy);
+					const float fade =
+						std::clamp((1.0f - radius) / 0.7f, 0.0f, 1.0f);
+					const float smoothFade =
+						fade * fade * (3.0f - 2.0f * fade);
+					const unsigned char alpha =
+						static_cast<unsigned char>(
+							88.0f * smoothFade *
+							std::exp(-radius * radius * 1.35f));
+					const size_t index =
+						static_cast<size_t>((y * ShadowSize + x) * 4);
+					pixels[index] = 15;
+					pixels[index + 1] = 19;
+					pixels[index + 2] = 27;
+					pixels[index + 3] = alpha;
 				}
-			}
-		}
 
-		void drawBookBox(Shader& shader, Polygon* bookQuad,
-			const glm::mat4& shelfBase, const glm::vec3& center,
-			const glm::vec3& size)
-		{
-			const glm::mat4 frontBackBase =
-				shelfBase *
-				glm::translate(glm::mat4(1.0f), center);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, size.z * 0.5f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.y, 1.0f)));
-			bookQuad->draw(shader);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -size.z * 0.5f)) *
-				glm::rotate(glm::mat4(1.0f), Pi, glm::vec3(0.0f, 1.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.y, 1.0f)));
-			bookQuad->draw(shader);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, size.y * 0.5f, 0.0f)) *
-				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f,
-					glm::vec3(1.0f, 0.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.z, 1.0f)));
-			bookQuad->draw(shader);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -size.y * 0.5f, 0.0f)) *
-				glm::rotate(glm::mat4(1.0f), Pi * 0.5f,
-					glm::vec3(1.0f, 0.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.z, 1.0f)));
-			bookQuad->draw(shader);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(-size.x * 0.5f, 0.0f, 0.0f)) *
-				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f,
-					glm::vec3(0.0f, 1.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.z, size.y, 1.0f)));
-			bookQuad->draw(shader);
-
-			bookQuad->transformation(
-				frontBackBase *
-				glm::translate(glm::mat4(1.0f), glm::vec3(size.x * 0.5f, 0.0f, 0.0f)) *
-				glm::rotate(glm::mat4(1.0f), Pi * 0.5f,
-					glm::vec3(0.0f, 1.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.z, size.y, 1.0f)));
-			bookQuad->draw(shader);
-		}
-
-		void drawTexturedPanel(Shader& shader, const glm::mat4& parent,
-			GLuint texture, const glm::vec3& localPosition,
-			const glm::vec3& scale, const glm::vec3& rotation)
-		{
-			glm::mat4 model = parent *
-				glm::translate(glm::mat4(1.0f), localPosition);
-			if (rotation.x != 0.0f)
-				model = glm::rotate(model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-			if (rotation.y != 0.0f)
-				model = glm::rotate(model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::scale(model, scale);
-
-			shader.setBool("useTexture", true);
-			shader.setVec2("textureScale", glm::vec2(1.0f));
-			texturedQuad->setTexture(texture);
-			texturedQuad->transformation(model);
-			glActiveTexture(GL_TEXTURE0);
-			texturedQuad->draw(shader);
-		}
-
-		void drawHorizontalTexturedPanel(Shader& shader, const glm::mat4& parent,
-			GLuint texture, const glm::vec3& localPosition, const glm::vec2& size)
-		{
-			shader.setBool("useTexture", true);
-			shader.setVec2("textureScale", glm::vec2(1.0f));
-			texturedQuad->setTexture(texture);
-			texturedQuad->transformation(
-				parent *
-				glm::translate(glm::mat4(1.0f), localPosition) *
-				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f,
-					glm::vec3(1.0f, 0.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.y, 1.0f)));
-			glActiveTexture(GL_TEXTURE0);
-			texturedQuad->draw(shader);
-		}
-
-		void drawTopCap(Shader& shader, const glm::mat4& shelfBase, GLuint texture)
-		{
-			constexpr float TopCapThickness = 0.28f;
-			const float capCenterY = ShelfHeight;
-
-			// Broad top and underside faces.
-			drawHorizontalTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(0.0f, capCenterY + TopCapThickness * 0.5f,
-					0.0f),
-				glm::vec2(ShelfWidth, ShelfDepth));
-			drawHorizontalTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(0.0f, capCenterY - TopCapThickness * 0.5f,
-					0.0f),
-				glm::vec2(ShelfWidth, ShelfDepth));
-
-			// Clear front, back, left, and right faces make the cap visibly solid.
-			drawTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(0.0f, capCenterY, ShelfDepth * 0.5f + 0.02f),
-				glm::vec3(ShelfWidth, TopCapThickness, 1.0f),
-				glm::vec3(0.0f));
-			drawTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(0.0f, capCenterY, -ShelfDepth * 0.5f - 0.02f),
-				glm::vec3(ShelfWidth, TopCapThickness, 1.0f),
-				glm::vec3(0.0f));
-			drawTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(-ShelfWidth * 0.5f - 0.02f, capCenterY, 0.0f),
-				glm::vec3(ShelfDepth, TopCapThickness, 1.0f),
-				glm::vec3(0.0f, -Pi * 0.5f, 0.0f));
-			drawTexturedPanel(shader, shelfBase, texture,
-				glm::vec3(ShelfWidth * 0.5f + 0.02f, capCenterY, 0.0f),
-				glm::vec3(ShelfDepth, TopCapThickness, 1.0f),
-				glm::vec3(0.0f, Pi * 0.5f, 0.0f));
-		}
-
-		void drawFloorLamp(Shader& shader)
-		{
-			const glm::mat4 lampBase =
-				glm::translate(glm::mat4(1.0f),
-					glm::vec3(FloorLampX, FloorLampFloorY, FloorLampZ));
-
-			drawCircularLampBase(shader, lampBase);
-
-			// Tall, thin stand and a small collar at the shade joint.
-			drawTexturedPanel(shader, lampBase, metalTexture,
-				glm::vec3(0.0f, 1.55f, 0.0f),
-				glm::vec3(0.10f, 2.78f, 1.0f),
-				glm::vec3(0.0f));
-			drawHorizontalLampPart(shader, lampBase, metalTexture,
-				glm::vec3(0.0f, 2.34f, 0.0f), glm::vec2(0.24f, 0.24f));
-
-			drawShadeFrustum(shader, lampBase);
-		}
-
-		void drawCircularLampBase(Shader& shader, const glm::mat4& lampBase)
-		{
-			if (!lampBaseTop)
-				throw std::logic_error("Lamp base top was not initialized.");
-
-			shader.setBool("useTexture", false);
-			lampBaseTop->transformation(lampBase);
-			lampBaseTop->draw(shader);
-			for (Polygon* side : lampBaseSides)
+			GLuint texture = 0;
+			glGenTextures(1, &texture);
+			if (!texture)
+				throw std::runtime_error("Failed to allocate decor shadow texture.");
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ShadowSize, ShadowSize,
+						 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+							GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			if (glGetError() != GL_NO_ERROR)
 			{
-				if (!side)
-					throw std::logic_error("Lamp base side was not initialized.");
-				side->transformation(lampBase);
-				side->draw(shader);
+				glDeleteTextures(1, &texture);
+				throw std::runtime_error("Failed to upload decor shadow texture.");
 			}
+			return texture;
 		}
 
-		void drawShadeFrustum(Shader& shader, const glm::mat4& lampBase)
+		static void appendCap(std::vector<TexturedVertex> &vertices,
+							  float radius, float y, int segments, bool top)
 		{
-			shader.setBool("useTexture", true);
-			shader.setVec2("textureScale", glm::vec2(1.0f));
-			for (PolygonWithTexture* shadeSegment : shadeSegments)
+			const TexturedVertex center =
+				makeVertex(glm::vec3(0.0f, y, 0.0f), glm::vec2(0.5f));
+			for (int i = 0; i < segments; ++i)
 			{
-				if (!shadeSegment)
-					throw std::logic_error("Lamp shade segment was not initialized.");
-				shadeSegment->setTexture(shadeTexture);
-				shadeSegment->transformation(lampBase);
-				glActiveTexture(GL_TEXTURE0);
-				shadeSegment->draw(shader);
+				const float angle0 =
+					2.0f * Pi * static_cast<float>(i) /
+					static_cast<float>(segments);
+				const float angle1 =
+					2.0f * Pi * static_cast<float>(i + 1) /
+					static_cast<float>(segments);
+				const glm::vec3 point0(
+					radius * std::cos(angle0), y,
+					radius * std::sin(angle0));
+				const glm::vec3 point1(
+					radius * std::cos(angle1), y,
+					radius * std::sin(angle1));
+				const TexturedVertex ring0 = makeVertex(point0,
+														glm::vec2(0.5f + 0.5f * std::cos(angle0),
+																  0.5f + 0.5f * std::sin(angle0)));
+				const TexturedVertex ring1 = makeVertex(point1,
+														glm::vec2(0.5f + 0.5f * std::cos(angle1),
+																  0.5f + 0.5f * std::sin(angle1)));
+				if (top)
+					appendTriangle(vertices, center, ring0, ring1);
+				else
+					appendTriangle(vertices, center, ring1, ring0);
 			}
 		}
 
-		void drawHorizontalLampPart(Shader& shader, const glm::mat4& parent,
-			GLuint texture, const glm::vec3& localPosition, const glm::vec2& size)
+		static void appendFrustum(std::vector<TexturedVertex> &vertices,
+								  float bottomRadius, float topRadius,
+								  float bottomY, float topY, int segments,
+								  float horizontalRepeats, bool caps = true)
 		{
-			shader.setBool("useTexture", true);
-			shader.setVec2("textureScale", glm::vec2(1.0f));
-			texturedQuad->setTexture(texture);
-			texturedQuad->transformation(
-				parent *
-				glm::translate(glm::mat4(1.0f), localPosition) *
-				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f,
-					glm::vec3(1.0f, 0.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f),
-					glm::vec3(size.x, size.y, 1.0f)));
-			glActiveTexture(GL_TEXTURE0);
-			texturedQuad->draw(shader);
+			const float height = topY - bottomY;
+			const float verticalRepeats = height / 0.7f;
+			for (int i = 0; i < segments; ++i)
+			{
+				const float angle0 =
+					2.0f * Pi * static_cast<float>(i) /
+					static_cast<float>(segments);
+				const float angle1 =
+					2.0f * Pi * static_cast<float>(i + 1) /
+					static_cast<float>(segments);
+				const float u0 =
+					horizontalRepeats * static_cast<float>(i) /
+					static_cast<float>(segments);
+				const float u1 =
+					horizontalRepeats * static_cast<float>(i + 1) /
+					static_cast<float>(segments);
+
+				const TexturedVertex bottom0 = makeVertex(
+					glm::vec3(bottomRadius * std::cos(angle0),
+							  bottomY, bottomRadius * std::sin(angle0)),
+					glm::vec2(u0, 0.0f));
+				const TexturedVertex bottom1 = makeVertex(
+					glm::vec3(bottomRadius * std::cos(angle1),
+							  bottomY, bottomRadius * std::sin(angle1)),
+					glm::vec2(u1, 0.0f));
+				const TexturedVertex top0 = makeVertex(
+					glm::vec3(topRadius * std::cos(angle0),
+							  topY, topRadius * std::sin(angle0)),
+					glm::vec2(u0, verticalRepeats));
+				const TexturedVertex top1 = makeVertex(
+					glm::vec3(topRadius * std::cos(angle1),
+							  topY, topRadius * std::sin(angle1)),
+					glm::vec2(u1, verticalRepeats));
+				appendTriangle(vertices, bottom0, top0, top1);
+				appendTriangle(vertices, bottom0, top1, bottom1);
+			}
+			if (caps)
+			{
+				appendCap(vertices, bottomRadius, bottomY, segments, false);
+				appendCap(vertices, topRadius, topY, segments, true);
+			}
 		}
+
+		std::unique_ptr<PolygonWithTexture> shadowQuad;
+		TexturedTriangleMesh metalMesh;
+		TexturedTriangleMesh shadeMesh;
+		TexturedTriangleMesh shelfMesh;
+		std::array<TexturedTriangleMesh, 4> bookMeshes;
+		TexturedTriangleMesh bookTrimMesh;
+		GLuint metalTexture = 0;
+		GLuint shadeTexture = 0;
+		GLuint shadowTexture = 0;
+
+		const std::array<glm::vec3, 4> BookColors = {
+			glm::vec3(0.78f, 0.09f, 0.12f),
+			glm::vec3(0.92f, 0.58f, 0.13f),
+			glm::vec3(0.10f, 0.46f, 0.23f),
+			glm::vec3(0.90f, 0.90f, 0.83f)};
 
 		static constexpr float ShelfX = 13.0f;
 		static constexpr float ShelfZ = -12.9f;
@@ -446,30 +493,5 @@ namespace scene
 		static constexpr float FloorLampX = -6.35f;
 		static constexpr float FloorLampZ = -13.3f;
 		static constexpr float FloorLampFloorY = -1.5f;
-		static constexpr float LampBaseRadius = 0.62f;
-		static constexpr float LampBaseBottomY = 0.06f;
-		static constexpr float LampBaseTopY = 0.16f;
-		static constexpr size_t LampBaseSegments = 24;
-		static constexpr float ShadeBottomY = 2.38f;
-		static constexpr float ShadeTopY = 3.05f;
-		static constexpr float ShadeBottomRadius = 0.82f;
-		static constexpr float ShadeTopRadius = 0.48f;
-
-		PolygonWithTexture* texturedQuad = nullptr;
-		std::array<PolygonWithTexture*, 32> shadeSegments{};
-		std::array<Polygon*, 6> bookQuads{};
-		Polygon* lampBaseTop = nullptr;
-		std::array<Polygon*, LampBaseSegments> lampBaseSides{};
-		GLuint metalTexture = 0;
-		GLuint shadeTexture = 0;
-		const glm::vec3 LampBaseColor = glm::vec3(0.32f, 0.34f, 0.36f);
-		const std::array<glm::vec3, 6> BookColors = {
-			glm::vec3(0.72f, 0.16f, 0.20f),
-			glm::vec3(0.86f, 0.52f, 0.24f),
-			glm::vec3(0.18f, 0.44f, 0.32f),
-			glm::vec3(0.48f, 0.42f, 0.68f),
-			glm::vec3(0.72f, 0.68f, 0.50f),
-			glm::vec3(0.82f, 0.72f, 0.66f)
-		};
 	};
 }

@@ -29,13 +29,13 @@ namespace scene
 				throw std::runtime_error("Unable to open the sofa OBJ or its associated MTL file.");
 
 			Assimp::Importer materialImporter;
-			const aiScene* importedScene = materialImporter.ReadFile(modelPath,
-				aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |
-				aiProcess_CalcTangentSpace);
+			const aiScene *importedScene = materialImporter.ReadFile(modelPath,
+																	 aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs |
+																		 aiProcess_CalcTangentSpace);
 			if (!importedScene || (importedScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) ||
 				!importedScene->mRootNode)
 				throw std::runtime_error("Unable to parse sofa model and materials: " +
-					std::string(materialImporter.GetErrorString()));
+										 std::string(materialImporter.GetErrorString()));
 
 			materialColors.clear();
 			materialNames.clear();
@@ -49,8 +49,8 @@ namespace scene
 
 			glm::vec3 minimum(std::numeric_limits<float>::max());
 			glm::vec3 maximum(std::numeric_limits<float>::lowest());
-			for (const Mesh& mesh : model->meshes)
-				for (const Vertex& vertex : mesh.vertices)
+			for (const Mesh &mesh : model->meshes)
+				for (const Vertex &vertex : mesh.vertices)
 				{
 					minimum = glm::min(minimum, vertex.Position);
 					maximum = glm::max(maximum, vertex.Position);
@@ -63,14 +63,14 @@ namespace scene
 
 			const float uniformScale = 8.0f / largestDimension;
 			const glm::vec3 modelAnchor((minimum.x + maximum.x) * 0.5f, minimum.y,
-				(minimum.z + maximum.z) * 0.5f);
+										(minimum.z + maximum.z) * 0.5f);
 			modelMatrix =
 				glm::translate(glm::mat4(1.0f), glm::vec3(-11.0f, -1.5f, -9.5f)) *
 				glm::scale(glm::mat4(1.0f), glm::vec3(uniformScale)) *
 				glm::translate(glm::mat4(1.0f), -modelAnchor);
 		}
 
-		void render(Shader& shader)
+		void render(Shader &shader)
 		{
 			if (!model || model->meshes.size() != materialColors.size() ||
 				model->meshes.size() != materialNames.size())
@@ -79,9 +79,10 @@ namespace scene
 			shader.setMat4("model", modelMatrix);
 			for (size_t i = 0; i < model->meshes.size(); ++i)
 			{
-				const Mesh& mesh = model->meshes[i];
+				const Mesh &mesh = model->meshes[i];
 				const bool hasDiffuseTexture = std::any_of(mesh.textures.begin(), mesh.textures.end(),
-					[](const Texture& texture) { return texture.type == "texture_diffuse"; });
+														   [](const Texture &texture)
+														   { return texture.type == "texture_diffuse"; });
 				shader.setBool("useTexture", hasDiffuseTexture);
 				shader.setVec3("objectColor", materialColors[i]);
 				shader.setBool("useSofaBodyTones", materialNames[i] == "m_sofa");
@@ -99,12 +100,12 @@ namespace scene
 		}
 
 	private:
-		void collectMaterialColors(const aiNode* node, const aiScene* importedScene)
+		void collectMaterialColors(const aiNode *node, const aiScene *importedScene)
 		{
 			for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 			{
-				const aiMesh* mesh = importedScene->mMeshes[node->mMeshes[i]];
-				const aiMaterial* material = importedScene->mMaterials[mesh->mMaterialIndex];
+				const aiMesh *mesh = importedScene->mMeshes[node->mMeshes[i]];
+				const aiMaterial *material = importedScene->mMaterials[mesh->mMaterialIndex];
 				aiColor3D diffuse(1.0f, 1.0f, 1.0f);
 				material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
 				aiString materialName;
@@ -132,6 +133,6 @@ namespace scene
 		std::unique_ptr<Model> model;
 		std::vector<glm::vec3> materialColors;
 		std::vector<std::string> materialNames;
-		glm::mat4 modelMatrix{ 1.0f };
+		glm::mat4 modelMatrix{1.0f};
 	};
 }
