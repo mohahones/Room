@@ -7,12 +7,14 @@
 #include "assist/Shared/RenderUtils.cpp"
 #include "assist/RoomSofa/Room.cpp"
 #include "assist/RoomSofa/Sofa.cpp"
+#include "assist/RoomSofa/Decor.cpp"
 #include "assist/TableCards/Table.cpp"
 #include "assist/TableCards/Cards.cpp"
 #include "assist/Animation/Animation.cpp"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+
 
 namespace
 {
@@ -58,9 +60,10 @@ namespace
 	}
 
 	void cleanupModules(scene::Room& room, scene::Table& table,
-		scene::Sofa& sofa, scene::Cards& cards)
+		scene::Sofa& sofa, scene::Decor& decor, scene::Cards& cards)
 	{
 		cards.cleanup();
+		decor.cleanup();
 		sofa.cleanup();
 		table.cleanup();
 		room.cleanup();
@@ -121,10 +124,12 @@ int main()
 	shader.use();
 	shader.setInt("texture_diffuse1", 0);
 	shader.setBool("useSofaBodyTones", false);
+	shader.setVec2("textureScale", glm::vec2(1.0f));
 
 	scene::Room room;
 	scene::Table table;
 	scene::Sofa sofa;
+	scene::Decor decor;
 	scene::Cards cards;
 	scene::Animation animation;
 
@@ -134,12 +139,13 @@ int main()
 		room.initialize();
 		table.initialize();
 		sofa.initialize();
+		decor.initialize();
 		cards.initialize();
 	}
 	catch (const std::exception& error)
 	{
 		std::cerr << "Initialization failed: " << error.what() << '\n';
-		cleanupModules(room, table, sofa, cards);
+		cleanupModules(room, table, sofa, decor, cards);
 		glDeleteProgram(shader.ID);
 		glfwDestroyWindow(window);
 		glfwTerminate();
@@ -183,6 +189,7 @@ int main()
 			room.render(shader);
 			table.render(shader);
 			sofa.render(shader);
+			decor.render(shader);
 			animation.render(shader, cards, cameraBlend);
 
 			glfwSwapBuffers(window);
@@ -192,14 +199,14 @@ int main()
 	catch (const std::exception& error)
 	{
 		std::cerr << "Rendering stopped: " << error.what() << '\n';
-		cleanupModules(room, table, sofa, cards);
+		cleanupModules(room, table, sofa, decor, cards);
 		glDeleteProgram(shader.ID);
 		glfwDestroyWindow(window);
 		glfwTerminate();
 		return 1;
 	}
 
-	cleanupModules(room, table, sofa, cards);
+	cleanupModules(room, table, sofa, decor, cards);
 	glDeleteProgram(shader.ID);
 	glfwDestroyWindow(window);
 	glfwTerminate();

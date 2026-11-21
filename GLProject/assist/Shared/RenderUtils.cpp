@@ -98,11 +98,12 @@ namespace scene
 	}
 
 	inline void drawTexturedPlane(Shader& shader, PolygonWithTexture& polygon, GLuint texture,
-		const glm::mat4& model)
+		const glm::mat4& model, const glm::vec2& uvScale = glm::vec2(1.0f))
 	{
 		if (!texture)
 			throw std::logic_error("Cannot draw a textured polygon without a valid texture.");
 		shader.setBool("useTexture", true);
+		shader.setVec2("textureScale", uvScale);
 		polygon.setTexture(texture);
 		polygon.transformation(model);
 		glActiveTexture(GL_TEXTURE0);
@@ -110,12 +111,13 @@ namespace scene
 	}
 
 	inline void drawHorizontalTexture(Shader& shader, PolygonWithTexture& polygon, GLuint texture,
-		const glm::vec3& center, const glm::vec2& size)
+		const glm::vec3& center, const glm::vec2& size,
+		const glm::vec2& uvScale = glm::vec2(1.0f))
 	{
 		const glm::mat4 model = glm::translate(glm::mat4(1.0f), center) *
 			glm::rotate(glm::mat4(1.0f), -Pi * 0.5f, glm::vec3(1.0f, 0.0f, 0.0f)) *
 			glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-		drawTexturedPlane(shader, polygon, texture, model);
+		drawTexturedPlane(shader, polygon, texture, model, uvScale);
 	}
 
 	inline void drawHorizontalSolid(Shader& shader, Polygon& polygon,

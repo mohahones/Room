@@ -33,6 +33,7 @@ set(OLD_GLOB
   "C:/Users/ASUS/Desktop/L4/GLProject/Polygon.cpp"
   "C:/Users/ASUS/Desktop/L4/GLProject/PolygonWithTexture.cpp"
   "C:/Users/ASUS/Desktop/L4/GLProject/assist/Animation/Animation.cpp"
+  "C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Decor.cpp"
   "C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Room.cpp"
   "C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Sofa.cpp"
   "C:/Users/ASUS/Desktop/L4/GLProject/assist/Shared/RenderUtils.cpp"

@@ -554,6 +554,7 @@ CMakeFiles/GLProject.dir/GLProject/Main.cpp.obj: C:/Users/ASUS/Desktop/L4/GLProj
   C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/xsavesintrin.h \
   C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/xtestintrin.h \
   C:/Users/ASUS/Desktop/L4/GLProject/assist/Animation/Animation.cpp \
+  C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Decor.cpp \
   C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Room.cpp \
   C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Sofa.cpp \
   C:/Users/ASUS/Desktop/L4/GLProject/assist/Shared/RenderUtils.cpp \
@@ -3011,6 +3012,8 @@ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/xsavecintrin.h:
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/xsaveoptintrin.h:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/xtestintrin.h:
+
+C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Decor.cpp:
 
 C:/Users/ASUS/Desktop/L4/GLProject/assist/RoomSofa/Room.cpp:
 

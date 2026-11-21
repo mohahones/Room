@@ -25,6 +25,7 @@ namespace scene
 
 		static constexpr float CardWidth = 0.76f;
 		static constexpr float CardHeight = 1.08f;
+		static constexpr std::array<int, 5> PlayOrder = {2, 1, 3, 0, 4};
 		std::vector<int> deck = {0, 1, 2, 3, 4};
 		std::mt19937 randomEngine{std::random_device{}()};
 		int playedCount = 0;
@@ -46,8 +47,7 @@ namespace scene
 			const size_t selected = choose(randomEngine);
 			CardState &card = cards[static_cast<size_t>(deck[selected])];
 			card.start = deckPosition(selected);
-			static constexpr std::array<int, 5> playOrder = {2, 1, 3, 0, 4};
-			const int playedSlot = playOrder[static_cast<size_t>(playedCount++)];
+			const int playedSlot = PlayOrder[static_cast<size_t>(playedCount++)];
 			card.finish = playedPosition(playedSlot);
 			card.playedSlot = playedSlot;
 			card.animationTime = 0.0f;
@@ -60,9 +60,8 @@ namespace scene
 			for (size_t i = 0; i < deck.size(); ++i)
 			{
 				const size_t cardIndex = static_cast<size_t>(deck[i]);
-				glm::vec3 center = deckPosition(i);
-				center.y += CardHeight * 0.5f * cameraBlend;
-				cardRenderer.renderCard(shader, cardIndex, cardModel(center, cameraBlend, 0.0f));
+				cardRenderer.renderCard(
+					shader, cardIndex, cardModel(deckPosition(i), cameraBlend, 0.0f));
 			}
 
 			for (size_t i = 0; i < cards.size(); ++i)
@@ -88,7 +87,6 @@ namespace scene
 					}
 				}
 
-				center.y += CardHeight * 0.5f * cameraBlend;
 				cardRenderer.renderCard(shader, i, cardModel(center, cameraBlend, spin));
 			}
 		}
@@ -108,7 +106,9 @@ namespace scene
 
 		static glm::mat4 cardModel(const glm::vec3 &center, float upright, float spin)
 		{
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), center);
+			glm::vec3 raisedCenter = center;
+			raisedCenter.y += CardHeight * 0.5f * upright;
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), raisedCenter);
 			model = glm::rotate(model, -Pi * 0.5f * (1.0f - upright),
 								glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::rotate(model, spin, glm::vec3(0.0f, 1.0f, 0.0f));

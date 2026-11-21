@@ -25,19 +25,20 @@ namespace scene
 			drawTexturedPlane(shader, *quad, floorTexture,
 				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.5f, 1.0f)) *
 				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f, glm::vec3(1.0f, 0.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f), glm::vec3(32.0f, 30.0f, 1.0f)));
+				glm::scale(glm::mat4(1.0f), glm::vec3(32.0f, 30.0f, 1.0f)),
+				glm::vec2(16.0f, 15.0f));
 
 			drawTexturedPlane(shader, *quad, wallTexture,
-				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.5f, -14.0f)) *
-				glm::scale(glm::mat4(1.0f), glm::vec3(32.0f, 8.0f, 1.0f)));
+				glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.25f, -14.0f)) *
+				glm::scale(glm::mat4(1.0f), glm::vec3(32.0f, 9.5f, 1.0f)));
 			drawTexturedPlane(shader, *quad, wallTexture,
-				glm::translate(glm::mat4(1.0f), glm::vec3(-16.0f, 2.5f, 1.0f)) *
+				glm::translate(glm::mat4(1.0f), glm::vec3(-16.0f, 3.25f, 1.0f)) *
 				glm::rotate(glm::mat4(1.0f), -Pi * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 8.0f, 1.0f)));
+				glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 9.5f, 1.0f)));
 			drawTexturedPlane(shader, *quad, wallTexture,
-				glm::translate(glm::mat4(1.0f), glm::vec3(16.0f, 2.5f, 1.0f)) *
+				glm::translate(glm::mat4(1.0f), glm::vec3(16.0f, 3.25f, 1.0f)) *
 				glm::rotate(glm::mat4(1.0f), Pi * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f)) *
-				glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 8.0f, 1.0f)));
+				glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 9.5f, 1.0f)));
 		}
 
 		void cleanup()

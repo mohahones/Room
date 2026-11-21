@@ -542,8 +542,9 @@ CMakeFiles/GLProject.dir/GLProject/Main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/node_handle.h \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/stl_map.h \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/stl_multimap.h \
- C:\Users\ASUS\Desktop\L4\GLProject\assist/TableCards/Table.cpp \
+ C:\Users\ASUS\Desktop\L4\GLProject\assist/RoomSofa/Decor.cpp \
  C:/msys64/ucrt64/include/c++/16.2.0/array \
+ C:\Users\ASUS\Desktop\L4\GLProject\assist/TableCards/Table.cpp \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/TableCards/Cards.cpp \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/Animation/Animation.cpp \
  C:/msys64/ucrt64/include/c++/16.2.0/random \
