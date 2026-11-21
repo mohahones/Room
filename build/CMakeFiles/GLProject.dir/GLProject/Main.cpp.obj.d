@@ -544,6 +544,9 @@ CMakeFiles/GLProject.dir/GLProject/Main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/stl_multimap.h \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/RoomSofa/Decor.cpp \
  C:/msys64/ucrt64/include/c++/16.2.0/array \
+ C:/msys64/ucrt64/include/c++/16.2.0/utility \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/stl_relops.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/intcmp.h \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/TableCards/Table.cpp \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/TableCards/Cards.cpp \
  C:\Users\ASUS\Desktop\L4\GLProject\assist/Animation/Animation.cpp \

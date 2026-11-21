@@ -74,21 +74,68 @@ CMakeFiles/GLProject.dir/GLProject/PolygonWithTexture.cpp.obj: \
  C:/msys64/ucrt64/include/c++/16.2.0/tuple \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/invoke.h \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/ranges_util.h \
- C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/learnopengl/shader_m.h \
- C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/glm.hpp \
- C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/_fixes.hpp \
- C:/msys64/ucrt64/include/c++/16.2.0/cmath \
- C:/msys64/ucrt64/include/math.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/std_abs.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/stdexcept \
+ C:/msys64/ucrt64/include/c++/16.2.0/exception \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/exception_ptr.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/cxxabi_init_exception.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/typeinfo \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/nested_exception.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/string \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/stringfwd.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/char_traits.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/postypes.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/cwchar \
+ C:/msys64/ucrt64/include/wchar.h \
+ C:/msys64/ucrt64/include/corecrt_wconio.h \
+ C:/msys64/ucrt64/include/corecrt_stdio_config.h \
+ C:/msys64/ucrt64/include/corecrt_wctype.h \
+ C:/msys64/ucrt64/include/corecrt_wdirect.h \
+ C:/msys64/ucrt64/include/corecrt_wio.h \
+ C:/msys64/ucrt64/include/corecrt_wprocess.h \
+ C:/msys64/ucrt64/include/corecrt_wstdio.h \
+ C:/msys64/ucrt64/include/corecrt_wstdlib.h \
+ C:/msys64/ucrt64/include/corecrt_wstring.h \
+ C:/msys64/ucrt64/include/corecrt_wtime.h \
+ C:/msys64/ucrt64/include/sys/stat.h C:/msys64/ucrt64/include/io.h \
+ C:/msys64/ucrt64/include/string.h \
+ C:/msys64/ucrt64/include/corecrt_memory.h \
+ C:/msys64/ucrt64/include/_mingw_off_t.h \
+ C:/msys64/ucrt64/include/sys/types.h \
+ C:/msys64/ucrt64/include/_mingw_stat64.h \
+ C:/msys64/ucrt64/include/_mingw_locale.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/localefwd.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/x86_64-w64-mingw32/bits/c++locale.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/clocale \
+ C:/msys64/ucrt64/include/locale.h C:/msys64/ucrt64/include/stdio.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/iosfwd \
+ C:/msys64/ucrt64/include/c++/16.2.0/cctype \
+ C:/msys64/ucrt64/include/ctype.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/ostream_insert.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/cxxabi_forced.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/basic_string.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/string_view \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/string_view.tcc \
+ C:/msys64/ucrt64/include/c++/16.2.0/ext/string_conversions.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/cstdlib \
  C:/msys64/ucrt64/include/stdlib.h \
  C:/msys64/ucrt64/include/corecrt_malloc.h \
- C:/msys64/ucrt64/include/corecrt_wstdlib.h \
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/limits.h \
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/syslimits.h \
  C:/msys64/ucrt64/include/limits.h C:/msys64/ucrt64/include/malloc.h \
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/mm_malloc.h \
  C:/msys64/ucrt64/include/c++/16.2.0/stdlib.h \
  C:/msys64/ucrt64/include/errno.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/std_abs.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/cstdio \
+ C:/msys64/ucrt64/include/c++/16.2.0/cerrno \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/charconv.h \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/basic_string.tcc \
+ C:/msys64/ucrt64/include/c++/16.2.0/bits/stdexcept_except.h \
+ C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/learnopengl/shader_m.h \
+ C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/glm.hpp \
+ C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/_fixes.hpp \
+ C:/msys64/ucrt64/include/c++/16.2.0/cmath \
+ C:/msys64/ucrt64/include/math.h \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/specfun.h \
  C:/msys64/ucrt64/include/c++/16.2.0/tr1/gamma.tcc \
  C:/msys64/ucrt64/include/c++/16.2.0/tr1/special_function_util.h \
@@ -105,7 +152,6 @@ CMakeFiles/GLProject.dir/GLProject/PolygonWithTexture.cpp.obj: \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/setup.hpp \
  C:/msys64/ucrt64/include/c++/16.2.0/cassert \
  C:/msys64/ucrt64/include/assert.h \
- C:/msys64/ucrt64/include/c++/16.2.0/cstdlib \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/simd/platform.h \
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/pmmintrin.h \
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/16.2.0/include/emmintrin.h \
@@ -350,9 +396,6 @@ CMakeFiles/GLProject.dir/GLProject/PolygonWithTexture.cpp.obj: \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/func_matrix_simd.inl \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/simd/matrix.h \
  C:/msys64/ucrt64/include/c++/16.2.0/cstring \
- C:/msys64/ucrt64/include/string.h \
- C:/msys64/ucrt64/include/corecrt_memory.h \
- C:/msys64/ucrt64/include/corecrt_wstring.h \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/ext/matrix_double2x2_precision.hpp \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/ext/matrix_float2x2.hpp \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/ext/matrix_float2x2_precision.hpp \
@@ -368,50 +411,9 @@ CMakeFiles/GLProject.dir/GLProject/PolygonWithTexture.cpp.obj: \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/func_integer.inl \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/detail/func_integer_simd.inl \
  C:/Users/ASUS/Desktop/L4/OpenGL.SharedModule/dependencies/include/glm/simd/integer.h \
- C:/msys64/ucrt64/include/c++/16.2.0/string \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/stringfwd.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/char_traits.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/postypes.h \
- C:/msys64/ucrt64/include/c++/16.2.0/cwchar \
- C:/msys64/ucrt64/include/wchar.h \
- C:/msys64/ucrt64/include/corecrt_wconio.h \
- C:/msys64/ucrt64/include/corecrt_stdio_config.h \
- C:/msys64/ucrt64/include/corecrt_wctype.h \
- C:/msys64/ucrt64/include/corecrt_wdirect.h \
- C:/msys64/ucrt64/include/corecrt_wio.h \
- C:/msys64/ucrt64/include/corecrt_wprocess.h \
- C:/msys64/ucrt64/include/corecrt_wstdio.h \
- C:/msys64/ucrt64/include/corecrt_wtime.h \
- C:/msys64/ucrt64/include/sys/stat.h C:/msys64/ucrt64/include/io.h \
- C:/msys64/ucrt64/include/_mingw_off_t.h \
- C:/msys64/ucrt64/include/sys/types.h \
- C:/msys64/ucrt64/include/_mingw_stat64.h \
- C:/msys64/ucrt64/include/_mingw_locale.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/localefwd.h \
- C:/msys64/ucrt64/include/c++/16.2.0/x86_64-w64-mingw32/bits/c++locale.h \
- C:/msys64/ucrt64/include/c++/16.2.0/clocale \
- C:/msys64/ucrt64/include/locale.h C:/msys64/ucrt64/include/stdio.h \
- C:/msys64/ucrt64/include/c++/16.2.0/iosfwd \
- C:/msys64/ucrt64/include/c++/16.2.0/cctype \
- C:/msys64/ucrt64/include/ctype.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/ostream_insert.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/cxxabi_forced.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/basic_string.h \
- C:/msys64/ucrt64/include/c++/16.2.0/string_view \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/string_view.tcc \
- C:/msys64/ucrt64/include/c++/16.2.0/ext/string_conversions.h \
- C:/msys64/ucrt64/include/c++/16.2.0/cstdio \
- C:/msys64/ucrt64/include/c++/16.2.0/cerrno \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/charconv.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/basic_string.tcc \
  C:/msys64/ucrt64/include/c++/16.2.0/fstream \
  C:/msys64/ucrt64/include/c++/16.2.0/istream \
  C:/msys64/ucrt64/include/c++/16.2.0/ios \
- C:/msys64/ucrt64/include/c++/16.2.0/exception \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/exception_ptr.h \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/cxxabi_init_exception.h \
- C:/msys64/ucrt64/include/c++/16.2.0/typeinfo \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/nested_exception.h \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/ios_base.h \
  C:/msys64/ucrt64/include/c++/16.2.0/ext/atomicity.h \
  C:/msys64/ucrt64/include/c++/16.2.0/x86_64-w64-mingw32/bits/gthr.h \
@@ -432,8 +434,6 @@ CMakeFiles/GLProject.dir/GLProject/PolygonWithTexture.cpp.obj: \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/locale_classes.tcc \
  C:/msys64/ucrt64/include/c++/16.2.0/system_error \
  C:/msys64/ucrt64/include/c++/16.2.0/x86_64-w64-mingw32/bits/error_constants.h \
- C:/msys64/ucrt64/include/c++/16.2.0/stdexcept \
- C:/msys64/ucrt64/include/c++/16.2.0/bits/stdexcept_except.h \
  C:/msys64/ucrt64/include/c++/16.2.0/streambuf \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/streambuf.tcc \
  C:/msys64/ucrt64/include/c++/16.2.0/bits/basic_ios.h \

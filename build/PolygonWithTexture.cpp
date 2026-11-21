@@ -1,25 +1,31 @@
 #include <glad/glad.h>
 #include <vector>
+#include <stdexcept>
 #include <learnopengl/shader_m.h>
 #include <glm/glm.hpp>
 
 class PolygonWithTexture
 {
 public:
-	PolygonWithTexture(std::vector<glm::vec3> v, std::vector<glm::vec2> t, glm::vec3 c = glm::vec3(1.0f, 1.0f, 1.0f))
+	PolygonWithTexture(std::vector<glm::vec3> v, std::vector<glm::vec2> t,
+		glm::vec3 c = glm::vec3(1.0f, 1.0f, 1.0f),
+		GLenum drawMode = GL_TRIANGLE_FAN)
 	{
-		for (int i = 0; i < v.size(); i++)
+		if (v.size() < 3 || v.size() != t.size())
+			throw std::invalid_argument(
+				"A textured polygon requires at least three vertices and matching texture coordinates.");
+		vertices.reserve(v.size() * 5);
+		for (size_t i = 0; i < v.size(); i++)
 		{
-			for (int j = 0; j < v[i].length(); j++)
-				vertices.push_back(v[i][j]);
-			for (int j = 0; j < t[i].length(); j++)
-				vertices.push_back(t[i][j]);
+			vertices.insert(vertices.end(),
+				{ v[i].x, v[i].y, v[i].z, t[i].x, t[i].y });
 		}
 		color = c;
 		model = glm::mat4(1.0f);
 		texture = 0;
+		this->drawMode = drawMode;
 
-		GLuint VBO, VAO;
+		GLuint VAO;
 		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);
 		glGenBuffers(1, &VBO);
@@ -51,13 +57,15 @@ public:
 		shader.setMat4("model", model);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindVertexArray(this->VAO);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, vertices.size() / 5);
+		glDrawArrays(drawMode, 0, static_cast<GLsizei>(vertices.size() / 5));
 	}
 
 	void deleteBuffers()
 	{
 		glDeleteVertexArrays(1, &VAO);
-		// glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &VBO);
+		VAO = 0;
+		VBO = 0;
 	}
 
 private:
@@ -65,6 +73,8 @@ private:
 	glm::vec3 color;
 	glm::mat4 model;
 	GLuint texture;
-	GLuint VAO;
+	GLuint VBO = 0;
+	GLuint VAO = 0;
+	GLenum drawMode = GL_TRIANGLE_FAN;
 	PolygonWithTexture();
 };
