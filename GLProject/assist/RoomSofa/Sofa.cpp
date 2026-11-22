@@ -18,6 +18,12 @@ namespace scene
 {
 	class Sofa
 	{
+	private:
+		std::unique_ptr<Model> model;
+		std::vector<glm::vec3> materialColors;
+		std::vector<std::string> materialNames;
+		glm::mat4 modelMatrix{1.0f};
+
 	public:
 		void initialize()
 		{
@@ -98,8 +104,6 @@ namespace scene
 			materialColors.clear();
 			materialNames.clear();
 		}
-
-	private:
 		void collectMaterialColors(const aiNode *node, const aiScene *importedScene)
 		{
 			for (unsigned int i = 0; i < node->mNumMeshes; ++i)
@@ -129,10 +133,5 @@ namespace scene
 			for (unsigned int i = 0; i < node->mNumChildren; ++i)
 				collectMaterialColors(node->mChildren[i], importedScene);
 		}
-
-		std::unique_ptr<Model> model;
-		std::vector<glm::vec3> materialColors;
-		std::vector<std::string> materialNames;
-		glm::mat4 modelMatrix{1.0f};
 	};
 }

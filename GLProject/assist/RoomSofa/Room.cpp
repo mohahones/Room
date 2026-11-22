@@ -9,6 +9,11 @@ namespace scene
 {
 	class Room
 	{
+	private:
+		std::unique_ptr<PolygonWithTexture> quad;
+		GLuint floorTexture = 0;
+		GLuint wallTexture = 0;
+
 	public:
 		void initialize()
 		{
@@ -53,10 +58,5 @@ namespace scene
 			floorTexture = 0;
 			wallTexture = 0;
 		}
-
-	private:
-		std::unique_ptr<PolygonWithTexture> quad;
-		GLuint floorTexture = 0;
-		GLuint wallTexture = 0;
 	};
 }

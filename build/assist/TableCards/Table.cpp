@@ -10,6 +10,14 @@ namespace scene
 {
 	class Table
 	{
+	private:
+		std::unique_ptr<PolygonWithTexture> sideQuad;
+		std::unique_ptr<PolygonWithTexture> boardQuad;
+		std::unique_ptr<PolygonWithTexture> middleZone;
+		std::array<std::unique_ptr<Polygon>, 2> playerZones;
+		GLuint woodTexture = 0;
+		GLuint middleTexture = 0;
+
 	public:
 		void initialize()
 		{
@@ -127,12 +135,5 @@ namespace scene
 				glm::vec3(0.0f, 0.025f, -1.82f + TableDepthOffset),
 				glm::vec2(playerZoneWidth, zoneHeight));
 		}
-
-		std::unique_ptr<PolygonWithTexture> sideQuad;
-		std::unique_ptr<PolygonWithTexture> boardQuad;
-		std::unique_ptr<PolygonWithTexture> middleZone;
-		std::array<std::unique_ptr<Polygon>, 2> playerZones;
-		GLuint woodTexture = 0;
-		GLuint middleTexture = 0;
 	};
 }

@@ -19,7 +19,37 @@ namespace scene
 	};
 
 	class Decor
-	{
+	{ 
+	private:
+		std::unique_ptr<PolygonWithTexture> shadowQuad;
+		std::unique_ptr<PolygonWithTexture> metalMesh;
+		std::unique_ptr<PolygonWithTexture> shadeMesh;
+		std::unique_ptr<PolygonWithTexture> shelfMesh;
+		std::array<std::unique_ptr<PolygonWithTexture>, 4> bookMeshes;
+		std::unique_ptr<PolygonWithTexture> bookTrimMesh;
+		std::unique_ptr<PolygonWithTexture> posterMesh;
+		GLuint metalTexture = 0;
+		GLuint shadeTexture = 0;
+		GLuint shadowTexture = 0;
+		GLuint posterTexture = 0;
+
+		static constexpr float ShelfX = 13.0f;
+		static constexpr float ShelfZ = -12.9f;
+		static constexpr float ShelfFloorY = -1.5f;
+		static constexpr float ShelfWidth = 5.8f;
+		static constexpr float ShelfDepth = 1.5f;
+		static constexpr float ShelfHeight = 6.2f;
+		static constexpr float ShelfPanelWidth = 0.18f;
+		static constexpr float ShelfBoardHeight = 0.12f;
+		static constexpr float FloorLampX = -6.35f;
+		static constexpr float FloorLampZ = -13.3f;
+		static constexpr float FloorLampFloorY = -1.5f;
+		const std::array<glm::vec3, 4> bookColors = {
+			glm::vec3(0.78f, 0.09f, 0.12f),
+			glm::vec3(0.92f, 0.58f, 0.13f),
+			glm::vec3(0.10f, 0.46f, 0.23f),
+			glm::vec3(0.9f, 0.9f, 0.83f)};
+
 	public:
 		void initialize()
 		{
@@ -27,6 +57,11 @@ namespace scene
 			shadowTexture = createContactShadowTexture();
 			metalTexture = loadTexture("./textures/blue_metal_plate_diff_1k.jpg");
 			shadeTexture = loadTexture("./textures/denim_fabric_04_diff_1k.jpg");
+			posterTexture = loadTexture("./textures/poster.jpg");
+			glBindTexture(GL_TEXTURE_2D, posterTexture);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			initializePoster();
 
 			std::vector<TexturedVertex> metalVertices;
 			appendFrustum(metalVertices, 0.34f, 0.30f, 0.0f, 0.12f, 24, 2.0f);
@@ -105,6 +140,7 @@ namespace scene
 				throw std::logic_error("Decor polygons were not initialized.");
 
 			drawContactShadows(shader);
+			drawPoster(shader);
 			drawFloorShelf(shader);
 			drawFloorLamp(shader);
 		}
@@ -126,12 +162,83 @@ namespace scene
 				glDeleteTextures(1, &metalTexture);
 			if (shadeTexture)
 				glDeleteTextures(1, &shadeTexture);
+			if (posterTexture)
+				glDeleteTextures(1, &posterTexture);
 			metalTexture = 0;
 			shadeTexture = 0;
 			shadowTexture = 0;
+			posterTexture = 0;
+			deleteMesh(posterMesh);
 		}
 
 	private:
+		void initializePoster()
+		{
+			constexpr float PosterLeft = -2.05f;
+			constexpr float PosterRight = 2.05f;
+			constexpr float PosterBottom = 0.85f;
+			constexpr float PosterTop = 5.65f;
+			constexpr float PosterWidth = PosterRight - PosterLeft;
+			constexpr float PosterHeight = PosterTop - PosterBottom;
+			constexpr float PosterImageAspect = 614.0f / 773.0f;
+			const float visibleImageHeight = PosterWidth / PosterHeight;
+			const float imageVInset =
+				(1.0f - PosterImageAspect / visibleImageHeight) * 0.5f;
+			const float z = -13.88f;
+			const std::array<float, 14> rightEdge = {
+				PosterRight, PosterRight, 1.94f, 2.14f, 1.96f, 2.12f,
+				1.93f, 2.13f, 1.95f, 2.10f, 1.94f, 2.13f,
+				PosterRight, PosterRight};
+
+			std::vector<TexturedVertex> paperVertices;
+			paperVertices.reserve((rightEdge.size() - 1) * 6);
+			for (size_t i = 0; i + 1 < rightEdge.size(); ++i)
+			{
+				const float bottomY = PosterBottom + PosterHeight *
+														 static_cast<float>(i) / static_cast<float>(rightEdge.size() - 1);
+				const float topY = PosterBottom + PosterHeight *
+													  static_cast<float>(i + 1) / static_cast<float>(rightEdge.size() - 1);
+				const TexturedVertex bottomLeft = makeVertex(
+					glm::vec3(PosterLeft, bottomY, z),
+					glm::vec2(0.0f,
+							  imageVInset + (1.0f - 2.0f * imageVInset) *
+												(bottomY - PosterBottom) / PosterHeight));
+				const TexturedVertex bottomRight = makeVertex(
+					glm::vec3(rightEdge[i], bottomY, z),
+					glm::vec2(std::clamp((rightEdge[i] - PosterLeft) / PosterWidth,
+										 0.0f, 1.0f),
+							  imageVInset + (1.0f - 2.0f * imageVInset) *
+												(bottomY - PosterBottom) / PosterHeight));
+				const TexturedVertex topRight = makeVertex(
+					glm::vec3(rightEdge[i + 1], topY, z),
+					glm::vec2(std::clamp((rightEdge[i + 1] - PosterLeft) / PosterWidth,
+										 0.0f, 1.0f),
+							  imageVInset + (1.0f - 2.0f * imageVInset) *
+												(topY - PosterBottom) / PosterHeight));
+				const TexturedVertex topLeft = makeVertex(
+					glm::vec3(PosterLeft, topY, z),
+					glm::vec2(0.0f,
+							  imageVInset + (1.0f - 2.0f * imageVInset) *
+												(topY - PosterBottom) / PosterHeight));
+				appendTriangle(paperVertices, bottomLeft, bottomRight, topRight);
+				appendTriangle(paperVertices, bottomLeft, topRight, topLeft);
+			}
+			posterMesh = createTriangleMesh(paperVertices);
+		}
+
+		void drawPoster(Shader &shader)
+		{
+			if (!posterTexture || !posterMesh)
+				throw std::logic_error("Poster was not initialized.");
+
+			shader.setBool("useTexture", true);
+			shader.setVec2("textureScale", glm::vec2(1.0f));
+			posterMesh->setTexture(posterTexture);
+			posterMesh->transformation(glm::mat4(1.0f));
+			glActiveTexture(GL_TEXTURE0);
+			posterMesh->draw(shader);
+		}
+
 		void drawContactShadows(Shader &shader)
 		{
 			if (!shadowTexture || !shadowQuad)
@@ -397,30 +504,5 @@ namespace scene
 			}
 		}
 
-		std::unique_ptr<PolygonWithTexture> shadowQuad;
-		std::unique_ptr<PolygonWithTexture> metalMesh;
-		std::unique_ptr<PolygonWithTexture> shadeMesh;
-		std::unique_ptr<PolygonWithTexture> shelfMesh;
-		std::array<std::unique_ptr<PolygonWithTexture>, 4> bookMeshes;
-		std::unique_ptr<PolygonWithTexture> bookTrimMesh;
-		GLuint metalTexture = 0;
-		GLuint shadeTexture = 0;
-		GLuint shadowTexture = 0;
-		const std::array<glm::vec3, 4> bookColors = {
-			glm::vec3(0.78f, 0.09f, 0.12f),
-			glm::vec3(0.92f, 0.58f, 0.13f),
-			glm::vec3(0.10f, 0.46f, 0.23f),
-			glm::vec3(0.9f, 0.9f, 0.83f)};
-		static constexpr float ShelfX = 13.0f;
-		static constexpr float ShelfZ = -12.9f;
-		static constexpr float ShelfFloorY = -1.5f;
-		static constexpr float ShelfWidth = 5.8f;
-		static constexpr float ShelfDepth = 1.5f;
-		static constexpr float ShelfHeight = 6.2f;
-		static constexpr float ShelfPanelWidth = 0.18f;
-		static constexpr float ShelfBoardHeight = 0.12f;
-		static constexpr float FloorLampX = -6.35f;
-		static constexpr float FloorLampZ = -13.3f;
-		static constexpr float FloorLampFloorY = -1.5f;
 	};
 }

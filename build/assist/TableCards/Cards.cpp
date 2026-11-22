@@ -11,6 +11,11 @@ namespace scene
 {
 	class Cards
 	{
+	private:
+		std::array<std::unique_ptr<PolygonWithTexture>, 5> cardQuads;
+		std::array<GLuint, 5> cardTextures{};
+		GLuint cardBackTexture = 0;
+
 	public:
 		void initialize()
 		{
@@ -68,10 +73,5 @@ namespace scene
 			cardTextures.fill(0);
 			cardBackTexture = 0;
 		}
-
-	private:
-		std::array<std::unique_ptr<PolygonWithTexture>, 5> cardQuads;
-		std::array<GLuint, 5> cardTextures{};
-		GLuint cardBackTexture = 0;
 	};
 }
