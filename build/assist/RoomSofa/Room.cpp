@@ -5,8 +5,6 @@
 #include <memory>
 #include <stdexcept>
 
-namespace scene
-{
 	class Room
 	{
 	private:
@@ -59,4 +57,3 @@ namespace scene
 			wallTexture = 0;
 		}
 	};
-}

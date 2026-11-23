@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-namespace scene
-{
 	struct TexturedVertex
 	{
 		glm::vec3 position;
@@ -433,4 +431,3 @@ namespace scene
 		}
 
 	};
-}

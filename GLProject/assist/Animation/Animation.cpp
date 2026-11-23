@@ -7,8 +7,6 @@
 #include <random>
 #include <vector>
 
-namespace scene
-{
 	class Animation
 	{
 	private:
@@ -115,4 +113,3 @@ namespace scene
 			return glm::scale(model, glm::vec3(CardWidth, CardHeight, 1.0f));
 		}
 	};
-}

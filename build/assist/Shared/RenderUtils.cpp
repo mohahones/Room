@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-namespace scene
-{
 	inline constexpr float Pi = 3.14159265f;
 	inline constexpr float TableDepthOffset = -1.2f;
 
@@ -130,4 +128,3 @@ namespace scene
 		polygon.transformation(model);
 		polygon.draw(shader);
 	}
-}

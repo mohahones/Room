@@ -14,8 +14,6 @@
 #include <string>
 #include <vector>
 
-namespace scene
-{
 	class Sofa
 	{
 	private:
@@ -134,4 +132,3 @@ namespace scene
 				collectMaterialColors(node->mChildren[i], importedScene);
 		}
 	};
-}

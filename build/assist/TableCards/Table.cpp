@@ -6,8 +6,6 @@
 #include <memory>
 #include <stdexcept>
 
-namespace scene
-{
 	class Table
 	{
 	private:
@@ -136,4 +134,3 @@ namespace scene
 				glm::vec2(playerZoneWidth, zoneHeight));
 		}
 	};
-}

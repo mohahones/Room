@@ -31,7 +31,7 @@ namespace
 	float cameraBlend = 0.0f;
 	float lastFrame = 0.0f;
 
-	void processInput(scene::Animation& animation)
+	void processInput(Animation& animation)
 	{
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
@@ -59,8 +59,8 @@ namespace
 		glViewport(0, 0, framebufferWidth, framebufferHeight);
 	}
 
-	void cleanupModules(scene::Room& room, scene::Table& table,
-		scene::Sofa& sofa, scene::Decor& decor, scene::Cards& cards)
+	void cleanupModules(Room& room, Table& table,
+		Sofa& sofa, Decor& decor, Cards& cards)
 	{
 		cards.cleanup();
 		decor.cleanup();
@@ -126,12 +126,12 @@ int main()
 	shader.setBool("useSofaBodyTones", false);
 	shader.setVec2("textureScale", glm::vec2(1.0f));
 
-	scene::Room room;
-	scene::Table table;
-	scene::Sofa sofa;
-	scene::Decor decor;
-	scene::Cards cards;
-	scene::Animation animation;
+	Room room;
+	Table table;
+	Sofa sofa;
+	Decor decor;
+	Cards cards;
+	Animation animation;
 
 	try
 	{
@@ -176,10 +176,10 @@ int main()
 			shader.setMat4("projection",
 				overhead * (1.0f - cameraBlend) + perspectiveProjection * cameraBlend);
 
-			const glm::vec3 overheadEye(0.0f, 12.0f, scene::TableDepthOffset);
-			const glm::vec3 playerEye(0.0f, 3.6f, 7.4f + scene::TableDepthOffset);
-			const glm::vec3 overheadTarget(0.0f, 0.0f, scene::TableDepthOffset);
-			const glm::vec3 playerTarget(0.0f, 0.8f, -1.0f + scene::TableDepthOffset);
+			const glm::vec3 overheadEye(0.0f, 12.0f, TableDepthOffset);
+			const glm::vec3 playerEye(0.0f, 3.6f, 7.4f + TableDepthOffset);
+			const glm::vec3 overheadTarget(0.0f, 0.0f, TableDepthOffset);
+			const glm::vec3 playerTarget(0.0f, 0.8f, -1.0f + TableDepthOffset);
 			const glm::vec3 eye = glm::mix(overheadEye, playerEye, cameraBlend);
 			const glm::vec3 target = glm::mix(overheadTarget, playerTarget, cameraBlend);
 			const glm::vec3 up = glm::normalize(glm::mix(glm::vec3(0.0f, 0.0f, -1.0f),

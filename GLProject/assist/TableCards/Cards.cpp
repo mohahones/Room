@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <string>
 
-namespace scene
-{
 	class Cards
 	{
 	private:
@@ -74,4 +72,3 @@ namespace scene
 			cardBackTexture = 0;
 		}
 	};
-}
