@@ -21,7 +21,6 @@ namespace scene
 	class Decor
 	{ 
 	private:
-		std::unique_ptr<PolygonWithTexture> shadowQuad;
 		std::unique_ptr<PolygonWithTexture> metalMesh;
 		std::unique_ptr<PolygonWithTexture> shadeMesh;
 		std::unique_ptr<PolygonWithTexture> shelfMesh;
@@ -30,7 +29,6 @@ namespace scene
 		std::unique_ptr<PolygonWithTexture> posterMesh;
 		GLuint metalTexture = 0;
 		GLuint shadeTexture = 0;
-		GLuint shadowTexture = 0;
 		GLuint posterTexture = 0;
 
 		static constexpr float ShelfX = 13.0f;
@@ -53,8 +51,6 @@ namespace scene
 	public:
 		void initialize()
 		{
-			shadowQuad = createTexturedQuad();
-			shadowTexture = createContactShadowTexture();
 			metalTexture = loadTexture("./textures/blue_metal_plate_diff_1k.jpg");
 			shadeTexture = loadTexture("./textures/denim_fabric_04_diff_1k.jpg");
 			posterTexture = loadTexture("./textures/poster.jpg");
@@ -136,10 +132,6 @@ namespace scene
 
 		void render(Shader &shader)
 		{
-			if (!shadowQuad)
-				throw std::logic_error("Decor polygons were not initialized.");
-
-			drawContactShadows(shader);
 			drawPoster(shader);
 			drawFloorShelf(shader);
 			drawFloorLamp(shader);
@@ -147,17 +139,12 @@ namespace scene
 
 		void cleanup()
 		{
-			if (shadowQuad)
-				shadowQuad->deleteBuffers();
-			shadowQuad.reset();
 			deleteMesh(metalMesh);
 			deleteMesh(shadeMesh);
 			deleteMesh(shelfMesh);
 			deleteMesh(bookTrimMesh);
 			for (auto &bookMesh : bookMeshes)
 				deleteMesh(bookMesh);
-			if (shadowTexture)
-				glDeleteTextures(1, &shadowTexture);
 			if (metalTexture)
 				glDeleteTextures(1, &metalTexture);
 			if (shadeTexture)
@@ -166,7 +153,6 @@ namespace scene
 				glDeleteTextures(1, &posterTexture);
 			metalTexture = 0;
 			shadeTexture = 0;
-			shadowTexture = 0;
 			posterTexture = 0;
 			deleteMesh(posterMesh);
 		}
@@ -186,9 +172,9 @@ namespace scene
 				(1.0f - PosterImageAspect / visibleImageHeight) * 0.5f;
 			const float z = -13.88f;
 			const std::array<float, 14> rightEdge = {
-				PosterRight, PosterRight, 1.94f, 2.14f, 1.96f, 2.12f,
-				1.93f, 2.13f, 1.95f, 2.10f, 1.94f, 2.13f,
-				PosterRight, PosterRight};
+				PosterRight, PosterRight, 1.8f, 2.29f, 1.86f, 2.17f,
+				1.83f, 2.18f, 1.85f, 2.18f, 1.84f, 2.18f,
+				2.0f, 2.0f};
 
 			std::vector<TexturedVertex> paperVertices;
 			paperVertices.reserve((rightEdge.size() - 1) * 6);
@@ -237,21 +223,6 @@ namespace scene
 			posterMesh->transformation(glm::mat4(1.0f));
 			glActiveTexture(GL_TEXTURE0);
 			posterMesh->draw(shader);
-		}
-
-		void drawContactShadows(Shader &shader)
-		{
-			if (!shadowTexture || !shadowQuad)
-				throw std::logic_error("Decor contact shadow was not initialized.");
-
-			glDepthMask(GL_FALSE);
-			drawHorizontalTexture(shader, *shadowQuad, shadowTexture,
-								  glm::vec3(ShelfX, ShelfFloorY + 0.004f, ShelfZ),
-								  glm::vec2(ShelfWidth + 0.72f, ShelfDepth + 0.62f));
-			drawHorizontalTexture(shader, *shadowQuad, shadowTexture,
-								  glm::vec3(FloorLampX, FloorLampFloorY + 0.004f, FloorLampZ),
-								  glm::vec2(1.52f, 1.52f));
-			glDepthMask(GL_TRUE);
 		}
 
 		void drawFloorShelf(Shader &shader)
@@ -394,49 +365,6 @@ namespace scene
 			appendBox(trimVertices,
 					  glm::vec3(center.x - size.x * 0.36f, center.y, front + 0.006f),
 					  glm::vec3(0.012f, size.y * 0.84f, 0.012f));
-		}
-
-		static GLuint createContactShadowTexture()
-		{
-			constexpr int ShadowSize = 128;
-			std::vector<unsigned char> pixels(ShadowSize * ShadowSize * 4);
-			for (int y = 0; y < ShadowSize; ++y)
-				for (int x = 0; x < ShadowSize; ++x)
-				{
-					const float dx = (static_cast<float>(x) + 0.5f) / ShadowSize * 2.0f - 1.0f;
-					const float dy = (static_cast<float>(y) + 0.5f) / ShadowSize * 2.0f - 1.0f;
-					const float radius = std::sqrt(dx * dx + dy * dy);
-					const float fade = std::clamp((1.0f - radius) / 0.7f, 0.0f, 1.0f);
-					const float smoothFade = fade * fade * (3.0f - 2.0f * fade);
-					const unsigned char alpha = static_cast<unsigned char>(
-						88.0f * smoothFade * std::exp(-radius * radius * 1.35f));
-					const size_t index = static_cast<size_t>((y * ShadowSize + x) * 4);
-					pixels[index] = 15;
-					pixels[index + 1] = 19;
-					pixels[index + 2] = 27;
-					pixels[index + 3] = alpha;
-				}
-
-			GLuint texture = 0;
-			glGenTextures(1, &texture);
-			if (!texture)
-				throw std::runtime_error("Failed to allocate the decor shadow texture.");
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ShadowSize, ShadowSize, 0,
-						 GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			glGenerateMipmap(GL_TEXTURE_2D);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			if (glGetError() != GL_NO_ERROR)
-			{
-				glDeleteTextures(1, &texture);
-				throw std::runtime_error("OpenGL failed to upload the decor shadow texture.");
-			}
-			return texture;
 		}
 
 		static void appendCap(std::vector<TexturedVertex> &vertices, float radius,
