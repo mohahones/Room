@@ -16,58 +16,55 @@
 #include <stdexcept>
 
 
-namespace
+constexpr int WindowWidth = 1280;
+constexpr int WindowHeight = 720;
+
+GLFWwindow* window = nullptr;
+int framebufferWidth = WindowWidth;
+int framebufferHeight = WindowHeight;
+bool oneKeyDown = false;
+bool twoKeyDown = false;
+bool gKeyDown = false;
+bool playerView = false;
+float cameraBlend = 0.0f;
+float lastFrame = 0.0f;
+
+void processInput(Animation& animation)
 {
-	constexpr int WindowWidth = 1280;
-	constexpr int WindowHeight = 720;
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 
-	GLFWwindow* window = nullptr;
-	int framebufferWidth = WindowWidth;
-	int framebufferHeight = WindowHeight;
-	bool oneKeyDown = false;
-	bool twoKeyDown = false;
-	bool gKeyDown = false;
-	bool playerView = false;
-	float cameraBlend = 0.0f;
-	float lastFrame = 0.0f;
+	const bool onePressed = glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS;
+	if (onePressed && !oneKeyDown)
+		playerView = false;
+	oneKeyDown = onePressed;
 
-	void processInput(Animation& animation)
-	{
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
+	const bool twoPressed = glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS;
+	if (twoPressed && !twoKeyDown)
+		playerView = true;
+	twoKeyDown = twoPressed;
 
-		const bool onePressed = glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS;
-		if (onePressed && !oneKeyDown)
-			playerView = false;
-		oneKeyDown = onePressed;
+	const bool gPressed = glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS;
+	if (gPressed && !gKeyDown)
+		animation.playRandomCard();
+	gKeyDown = gPressed;
+}
 
-		const bool twoPressed = glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS;
-		if (twoPressed && !twoKeyDown)
-			playerView = true;
-		twoKeyDown = twoPressed;
+void resizeCallback(GLFWwindow*, int width, int height)
+{
+	framebufferWidth = std::max(width, 1);
+	framebufferHeight = std::max(height, 1);
+	glViewport(0, 0, framebufferWidth, framebufferHeight);
+}
 
-		const bool gPressed = glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS;
-		if (gPressed && !gKeyDown)
-			animation.playRandomCard();
-		gKeyDown = gPressed;
-	}
-
-	void resizeCallback(GLFWwindow*, int width, int height)
-	{
-		framebufferWidth = std::max(width, 1);
-		framebufferHeight = std::max(height, 1);
-		glViewport(0, 0, framebufferWidth, framebufferHeight);
-	}
-
-	void cleanupModules(Room& room, Table& table,
-		Sofa& sofa, Decor& decor, Cards& cards)
-	{
-		cards.cleanup();
-		decor.cleanup();
-		sofa.cleanup();
-		table.cleanup();
-		room.cleanup();
-	}
+void cleanupModules(Room& room, Table& table,
+	Sofa& sofa, Decor& decor, Cards& cards)
+{
+	cards.cleanup();
+	decor.cleanup();
+	sofa.cleanup();
+	table.cleanup();
+	room.cleanup();
 }
 
 int main()
